@@ -8,7 +8,7 @@ The package is still in development.
 Install using composer
 
 ```bash
-  composer require ...
+  composer require olekjs/elasticsearch
 ```
     
 Set Elasticsearch base URL in `.env` file
