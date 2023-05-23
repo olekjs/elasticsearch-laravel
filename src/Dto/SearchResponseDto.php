@@ -1,14 +1,16 @@
 <?php
 
-namespace Elasticsearch\Dto;
+namespace Olekjs\Elasticsearch\Dto;
 
-class SearchResponseDto
+use Olekjs\Elasticsearch\Contracts\ResponseDtoInterface;
+
+class SearchResponseDto implements ResponseDtoInterface
 {
     public function __construct(
         private readonly int $took,
         private readonly bool $isTimedOut,
         private readonly ShardsResponseDto $shards,
-        private readonly SearchHitsDto $hits,
+        private readonly SearchHitsDto $results,
     ) {
     }
 
@@ -22,9 +24,9 @@ class SearchResponseDto
         return $this->isTimedOut;
     }
 
-    public function getHits(): SearchHitsDto
+    public function getResults(): SearchHitsDto
     {
-        return $this->hits;
+        return $this->results;
     }
 
     public function getShards(): ShardsResponseDto

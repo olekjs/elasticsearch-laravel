@@ -1,6 +1,6 @@
 <?php
 
-namespace Elasticsearch\Exceptions;
+namespace Olekjs\Elasticsearch\Exceptions;
 
 class IndexResponseException extends CoreException
 {

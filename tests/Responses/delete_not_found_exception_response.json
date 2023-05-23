@@ -1,0 +1,13 @@
+{
+    "_index": "hello",
+    "_id": "324234",
+    "_version": 1,
+    "result": "not_found",
+    "_shards": {
+        "total": 2,
+        "successful": 1,
+        "failed": 0
+    },
+    "_seq_no": 26,
+    "_primary_term": 1
+}

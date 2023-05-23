@@ -1,8 +1,10 @@
 <?php
 
-namespace Elasticsearch\Dto;
+namespace Olekjs\Elasticsearch\Dto;
 
-class SearchHitDto
+use Olekjs\Elasticsearch\Contracts\ResponseDtoInterface;
+
+class SearchHitDto implements ResponseDtoInterface
 {
     public function __construct(
         private readonly string $index,

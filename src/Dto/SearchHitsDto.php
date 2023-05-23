@@ -1,12 +1,14 @@
 <?php
 
-namespace Elasticsearch\Dto;
+namespace Olekjs\Elasticsearch\Dto;
 
-class SearchHitsDto
+use Olekjs\Elasticsearch\Contracts\ResponseDtoInterface;
+
+class SearchHitsDto implements ResponseDtoInterface
 {
     public function __construct(
         private readonly array $total,
-        private readonly float $maxScore,
+        private readonly ?float $maxScore = null,
 
         /** @var SearchHitDto[] */
         private readonly array $hits = [],
@@ -18,7 +20,7 @@ class SearchHitsDto
         return $this->total;
     }
 
-    public function getMaxScore(): float
+    public function getMaxScore(): ?float
     {
         return $this->maxScore;
     }

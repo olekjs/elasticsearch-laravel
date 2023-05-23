@@ -1,0 +1,17 @@
+{
+    "error": {
+        "root_cause": [
+            {
+                "type": "mapper_parsing_exception",
+                "reason": "failed to parse field [hello_field] of type [long] in document with id '123'. Preview of field's value: '{0=21}'"
+            }
+        ],
+        "type": "mapper_parsing_exception",
+        "reason": "failed to parse field [hello_field] of type [long] in document with id '123'. Preview of field's value: '{0=21}'",
+        "caused_by": {
+            "type": "illegal_argument_exception",
+            "reason": "Cannot parse object as number"
+        }
+    },
+    "status": 400
+}

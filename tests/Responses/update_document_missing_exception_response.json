@@ -1,0 +1,19 @@
+{
+    "error": {
+        "root_cause": [
+            {
+                "type": "document_missing_exception",
+                "reason": "[123213123]: document missing",
+                "index_uuid": "Er58oFsKS2e4QZWDNCQ2KQ",
+                "shard": "0",
+                "index": "hello"
+            }
+        ],
+        "type": "document_missing_exception",
+        "reason": "[123213123]: document missing",
+        "index_uuid": "Er58oFsKS2e4QZWDNCQ2KQ",
+        "shard": "0",
+        "index": "hello"
+    },
+    "status": 404
+}

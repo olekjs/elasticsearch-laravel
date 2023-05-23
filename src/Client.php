@@ -1,67 +1,43 @@
 <?php
 
-namespace Elasticsearch;
+namespace Olekjs\Elasticsearch;
 
-use Elasticsearch\Contracts\ClientInterface;
-use Elasticsearch\Dto\IndexResponseDto;
-use Elasticsearch\Dto\SearchHitDto;
-use Elasticsearch\Dto\SearchHitsDto;
-use Elasticsearch\Dto\SearchResponseDto;
-use Elasticsearch\Dto\ShardsResponseDto;
-use Elasticsearch\Exceptions\ConflictResponseException;
-use Elasticsearch\Exceptions\DeleteResponseException;
-use Elasticsearch\Exceptions\FindResponseException;
-use Elasticsearch\Exceptions\IndexNotFoundResponseException;
-use Elasticsearch\Exceptions\IndexResponseException;
-use Elasticsearch\Exceptions\NotFoundResponseException;
-use Elasticsearch\Exceptions\SearchResponseException;
-use Elasticsearch\Exceptions\UpdateResponseException;
-use Illuminate\Support\Facades\Http;
+use Olekjs\Elasticsearch\Contracts\AbstractClient;
+use Olekjs\Elasticsearch\Contracts\ClientInterface;
+use Olekjs\Elasticsearch\Dto\IndexResponseDto;
+use Olekjs\Elasticsearch\Dto\SearchResponseDto;
+use Olekjs\Elasticsearch\Exceptions\ConflictResponseException;
+use Olekjs\Elasticsearch\Exceptions\DeleteResponseException;
+use Olekjs\Elasticsearch\Exceptions\FindResponseException;
+use Olekjs\Elasticsearch\Exceptions\IndexNotFoundResponseException;
+use Olekjs\Elasticsearch\Exceptions\IndexResponseException;
+use Olekjs\Elasticsearch\Exceptions\NotFoundResponseException;
+use Olekjs\Elasticsearch\Exceptions\SearchResponseException;
+use Olekjs\Elasticsearch\Exceptions\UpdateResponseException;
+use Olekjs\Elasticsearch\Utils\FindResponse;
+use Olekjs\Elasticsearch\Utils\IndexResponse;
+use Olekjs\Elasticsearch\Utils\SearchResponse;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
-use Elasticsearch\Dto\FindResponseDto;
+use Olekjs\Elasticsearch\Dto\FindResponseDto;
 
-class Client implements ClientInterface
+class Client extends AbstractClient implements ClientInterface
 {
     /**
      * @throws SearchResponseException
      */
     public function search(string $index, array $data): SearchResponseDto
     {
-        $response = Http::acceptJson()
-            ->asJson()
-            ->baseUrl(config('services.elasticsearch.url'))
+        $response = $this->getBaseClient()
             ->post("$index/_search", $data);
 
         if ($response->clientError()) {
-            throw new SearchResponseException(
+            $this->throwSearchResponseException(
                 data_get($response, 'error.reason'),
                 $response->status(),
             );
         }
 
-        return new SearchResponseDto(
-            took: data_get($response, 'took'),
-            isTimedOut: data_get($response, 'timed_out'),
-            shards: new ShardsResponseDto(
-                total: data_get($response, '_shards.total'),
-                successful: data_get($response, '_shards.successful'),
-                failed: data_get($response, '_shards.failed'),
-                skipped: data_get($response, '_shards.skipped'),
-            ),
-            hits: new SearchHitsDto(
-                total: data_get($response, 'hits.total'),
-                maxScore: data_get($response, 'hits.max_score'),
-                hits: array_map(
-                    fn(array $hit): SearchHitDto => new SearchHitDto(
-                        index: data_get($hit, '_index'),
-                        id: data_get($hit, '_id'),
-                        score: data_get($hit, '_score'),
-                        source: data_get($hit, '_source'),
-                    ),
-                    data_get($response, 'hits.hits'),
-                )
-            )
-        );
+        return SearchResponse::from($response);
     }
 
     /**
@@ -70,15 +46,12 @@ class Client implements ClientInterface
      */
     public function find(string $index, string|int $id): ?FindResponseDto
     {
-        $response = Http::acceptJson()
-            ->asJson()
-            ->baseUrl(config('services.elasticsearch.url'))
+        $response = $this->getBaseClient()
             ->get("$index/_doc/$id");
 
         if ($response->notFound() && data_get($response, 'error.type') === 'index_not_found_exception') {
-            throw new IndexNotFoundResponseException(
-                data_get($response, 'error.reason'),
-                $response->status(),
+            $this->throwIndexNotFoundException(
+                data_get($response, 'error.reason')
             );
         }
 
@@ -93,15 +66,7 @@ class Client implements ClientInterface
             );
         }
 
-        return new FindResponseDto(
-            index: data_get($response, '_index'),
-            id: data_get($response, '_id'),
-            version: data_get($response, '_version'),
-            sequenceNumber: data_get($response, '_seq_no'),
-            primaryTerm: data_get($response, '_primary_term'),
-            found: data_get($response, 'found'),
-            source: data_get($response, '_source'),
-        );
+        return FindResponse::from($response);
     }
 
     /**
@@ -114,9 +79,8 @@ class Client implements ClientInterface
         $result = $this->find($index, $id);
 
         if (is_null($result)) {
-            throw new NotFoundResponseException(
-                "Document [$id] in index [$index] not found.",
-                SymfonyResponse::HTTP_NOT_FOUND
+            $this->throwNotFoundException(
+                "Document [$id] in index [$index] not found."
             );
         }
 
@@ -128,31 +92,17 @@ class Client implements ClientInterface
      */
     public function create(string $index, string|int $id, array $data): IndexResponseDto
     {
-        $response = Http::acceptJson()
-            ->asJson()
-            ->baseUrl(config('services.elasticsearch.url'))
+        $response = $this->getBaseClient()
             ->post("$index/_create/$id", $data);
 
         if ($response->clientError()) {
-            throw new IndexResponseException(
+            $this->throwIndexResponseException(
                 json_encode($response->json()),
                 $response->status()
             );
         }
 
-        return new IndexResponseDto(
-            index: data_get($response, '_index'),
-            id: data_get($response, '_id'),
-            version: data_get($response, '_version'),
-            result: data_get($response, 'result'),
-            shards: new ShardsResponseDto(
-                total: data_get($response, '_shards.total'),
-                successful: data_get($response, '_shards.successful'),
-                failed: data_get($response, '_shards.failed'),
-            ),
-            sequenceNumber: data_get($response, '_seq_no'),
-            primaryTerm: data_get($response, '_primary_term')
-        );
+        return IndexResponse::from($response);
     }
 
     /**
@@ -163,7 +113,8 @@ class Client implements ClientInterface
     public function update(
         string $index,
         string|int $id,
-        array $data,
+        array $data = [],
+        array $script = [],
         ?int $primaryTerm = null,
         ?int $sequenceNumber = null
     ): IndexResponseDto {
@@ -178,17 +129,17 @@ class Client implements ClientInterface
             $baseUrl = $baseUrl . '?' . $strictUrl;
         }
 
-        $response = Http::acceptJson()
-            ->asJson()
-            ->baseUrl(config('services.elasticsearch.url'))
-            ->post($baseUrl, [
-                'doc' => $data
-            ]);
+        $body = match (true) {
+            empty($data) => ['script' => $script],
+            empty($script) => ['doc' => $data]
+        };
+
+        $response = $this->getBaseClient()
+            ->post($baseUrl, $body);
 
         if ($response->notFound() && data_get($response, 'status') === SymfonyResponse::HTTP_NOT_FOUND) {
-            throw new NotFoundResponseException(
-                json_encode($response->json()),
-                $response->status()
+            $this->throwNotFoundException(
+                json_encode($response->json())
             );
         }
 
@@ -198,32 +149,19 @@ class Client implements ClientInterface
             && $response->clientError()
             && data_get($response, 'status') === SymfonyResponse::HTTP_CONFLICT
         ) {
-            throw new ConflictResponseException(
-                json_encode($response->json()),
-                $response->status()
+            $this->throwConflictResponseException(
+                json_encode($response->json())
             );
         }
 
         if ($response->clientError()) {
-            throw new UpdateResponseException(
+            $this->throwUpdateResponseException(
                 json_encode($response->json()),
                 $response->status()
             );
         }
 
-        return new IndexResponseDto(
-            index: data_get($response, '_index'),
-            id: data_get($response, '_id'),
-            version: data_get($response, '_version'),
-            result: data_get($response, 'result'),
-            shards: new ShardsResponseDto(
-                total: data_get($response, '_shards.total'),
-                successful: data_get($response, '_shards.successful'),
-                failed: data_get($response, '_shards.failed'),
-            ),
-            sequenceNumber: data_get($response, '_seq_no'),
-            primaryTerm: data_get($response, '_primary_term')
-        );
+        return IndexResponse::from($response);
     }
 
     /**
@@ -232,37 +170,96 @@ class Client implements ClientInterface
      */
     public function delete(string $index, string|int $id): IndexResponseDto
     {
-        $response = Http::acceptJson()
-            ->asJson()
-            ->baseUrl(config('services.elasticsearch.url'))
+        $response = $this->getBaseClient()
             ->delete("$index/_doc/$id");
 
         if ($response->notFound() && data_get($response, 'result') === 'not_found') {
-            throw new NotFoundResponseException(
-                json_encode($response->json()),
-                $response->status()
+            $this->throwNotFoundException(
+                json_encode($response->json())
             );
         }
 
         if ($response->clientError()) {
-            throw new DeleteResponseException(
+            $this->throwDeleteResponseException(
                 json_encode($response->json()),
                 $response->status()
             );
         }
 
-        return new IndexResponseDto(
-            index: data_get($response, '_index'),
-            id: data_get($response, '_id'),
-            version: data_get($response, '_version'),
-            result: data_get($response, 'result'),
-            shards: new ShardsResponseDto(
-                total: data_get($response, '_shards.total'),
-                successful: data_get($response, '_shards.successful'),
-                failed: data_get($response, '_shards.failed'),
-            ),
-            sequenceNumber: data_get($response, '_seq_no'),
-            primaryTerm: data_get($response, '_primary_term')
-        );
+        return IndexResponse::from($response);
+    }
+
+    /**
+     * @throws SearchResponseException
+     */
+    public function searchWhereIn(string $index, string $field, array $values): SearchResponseDto
+    {
+        return $this->search($index, [
+            'query' => [
+                $field => [
+                    'values' => $values
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * @throws SearchResponseException
+     */
+    public function searchWhereKeyword(string $index, string $field, string $value): SearchResponseDto
+    {
+        return $this->search($index, [
+            'query' => [
+                'term' => [
+                    $field . '.keyword' => $value
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * @throws SearchResponseException
+     */
+    public function searchWhereLike(string $index, string $field, string|int|float $value): SearchResponseDto
+    {
+        return $this->search($index, [
+            'query' => [
+                'wildcard' => [
+                    $field => [
+                        'value' => $value
+                    ]
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * @throws NotFoundResponseException
+     * @throws UpdateResponseException
+     * @throws ConflictResponseException
+     */
+    public function increment(string $index, string|int $id, string $field, int $value = 1): IndexResponseDto
+    {
+        return $this->update($index, $id, [], [
+            'source' => "ctx._source.doc.$field += params.count",
+            'params' => [
+                'count' => $value
+            ]
+        ]);
+    }
+
+    /**
+     * @throws NotFoundResponseException
+     * @throws UpdateResponseException
+     * @throws ConflictResponseException
+     */
+    public function decrement(string $index, string|int $id, string $field, int $value = 1): IndexResponseDto
+    {
+        return $this->update($index, $id, [], [
+            'source' => "ctx._source.doc.$field -= params.count",
+            'params' => [
+                'count' => $value
+            ]
+        ]);
     }
 }

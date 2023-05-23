@@ -1,8 +1,10 @@
 <?php
 
-namespace Elasticsearch\Dto;
+namespace Olekjs\Elasticsearch\Dto;
 
-class ShardsResponseDto
+use Olekjs\Elasticsearch\Contracts\ResponseDtoInterface;
+
+class ShardsResponseDto implements ResponseDtoInterface
 {
     public function __construct(
         private readonly int $total,

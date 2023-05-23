@@ -1,6 +1,6 @@
 <?php
 
-namespace Elasticsearch\Exceptions;
+namespace Olekjs\Elasticsearch\Exceptions;
 
 class ConflictResponseException extends CoreException
 {

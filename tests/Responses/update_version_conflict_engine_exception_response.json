@@ -1,0 +1,19 @@
+{
+    "error": {
+        "root_cause": [
+            {
+                "type": "version_conflict_engine_exception",
+                "reason": "[123]: version conflict, required seqNo [2], primary term [1]. current document has seqNo [25] and primary term [1]",
+                "index_uuid": "Er58oFsKS2e4QZWDNCQ2KQ",
+                "shard": "0",
+                "index": "hello"
+            }
+        ],
+        "type": "version_conflict_engine_exception",
+        "reason": "[123]: version conflict, required seqNo [2], primary term [1]. current document has seqNo [25] and primary term [1]",
+        "index_uuid": "Er58oFsKS2e4QZWDNCQ2KQ",
+        "shard": "0",
+        "index": "hello"
+    },
+    "status": 409
+}
