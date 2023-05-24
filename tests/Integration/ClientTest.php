@@ -1,6 +1,6 @@
 <?php
 
-namespace Olekjs\Tests\Integration;
+namespace Olekjs\Elasticsearch\Tests\Integration;
 
 use Illuminate\Support\Facades\Http;
 use Olekjs\Elasticsearch\Client;
