@@ -5,8 +5,10 @@ namespace Olekjs\Elasticsearch;
 use Olekjs\Elasticsearch\Contracts\AbstractClient;
 use Olekjs\Elasticsearch\Contracts\ClientInterface;
 use Olekjs\Elasticsearch\Dto\IndexResponseDto;
+use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
 use Olekjs\Elasticsearch\Dto\SearchResponseDto;
 use Olekjs\Elasticsearch\Exceptions\ConflictResponseException;
+use Olekjs\Elasticsearch\Exceptions\CoreException;
 use Olekjs\Elasticsearch\Exceptions\DeleteResponseException;
 use Olekjs\Elasticsearch\Exceptions\FindResponseException;
 use Olekjs\Elasticsearch\Exceptions\IndexNotFoundResponseException;
@@ -16,6 +18,7 @@ use Olekjs\Elasticsearch\Exceptions\SearchResponseException;
 use Olekjs\Elasticsearch\Exceptions\UpdateResponseException;
 use Olekjs\Elasticsearch\Utils\FindResponse;
 use Olekjs\Elasticsearch\Utils\IndexResponse;
+use Olekjs\Elasticsearch\Utils\PaginateResponse;
 use Olekjs\Elasticsearch\Utils\SearchResponse;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Olekjs\Elasticsearch\Dto\FindResponseDto;
@@ -241,7 +244,7 @@ class Client extends AbstractClient implements ClientInterface
     public function increment(string $index, string|int $id, string $field, int $value = 1): IndexResponseDto
     {
         return $this->update($index, $id, [], [
-            'source' => "ctx._source.doc.$field += params.count",
+            'source' => "ctx._source.$field += params.count",
             'params' => [
                 'count' => $value
             ]
@@ -256,10 +259,82 @@ class Client extends AbstractClient implements ClientInterface
     public function decrement(string $index, string|int $id, string $field, int $value = 1): IndexResponseDto
     {
         return $this->update($index, $id, [], [
-            'source' => "ctx._source.doc.$field -= params.count",
+            'source' => "ctx._source.$field -= params.count",
             'params' => [
                 'count' => $value
             ]
+        ]);
+    }
+
+    /**
+     * @throws SearchResponseException
+     * @throws CoreException
+     */
+    public function count(string $index, array $data = []): int
+    {
+        if (empty($data)) {
+            $data = [
+                'query' => [
+                    'match_all' => (object)[]
+                ]
+            ];
+        }
+
+        $response = $this->getBaseClient()
+            ->post("$index/_count", $data);
+
+        if ($response->clientError()) {
+            $this->throwSearchResponseException(
+                data_get($response, 'error.reason'),
+                $response->status(),
+            );
+        }
+
+        return data_get(
+            $response,
+            'count',
+            fn() => throw new CoreException('Wrong response type')
+        );
+    }
+
+    /**
+     * @throws SearchResponseException
+     * @throws CoreException
+     */
+    public function paginate(string $index, array $data = [], int $page = 1, int $perPage = 25): PaginateResponseDto
+    {
+        if (empty($data)) {
+            $data = [
+                'query' => [
+                    'match_all' => (object)[]
+                ]
+            ];
+        }
+
+        $totalDocuments = $this->count($index, $data);
+
+        $pages = (int)ceil(
+            $totalDocuments === 0 ? 0 : ($totalDocuments <= $perPage ? 1 : $totalDocuments / $perPage)
+        );
+
+        $data['from'] = $page * $perPage;
+        $data['size'] = $perPage;
+
+        $response = $this->getBaseClient()
+            ->post("$index/_search", $data);
+
+        if ($response->clientError()) {
+            $this->throwSearchResponseException(
+                data_get($response, 'error.reason'),
+                $response->status(),
+            );
+        }
+
+        return PaginateResponse::from($response, [
+            'per_page' => $perPage,
+            'current_page' => $page,
+            'total_pages' => $pages,
+            'total_documents' => $totalDocuments
         ]);
     }
 }

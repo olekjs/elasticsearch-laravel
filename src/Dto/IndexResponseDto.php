@@ -2,9 +2,10 @@
 
 namespace Olekjs\Elasticsearch\Dto;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Olekjs\Elasticsearch\Contracts\ResponseDtoInterface;
 
-class IndexResponseDto implements ResponseDtoInterface
+class IndexResponseDto implements ResponseDtoInterface, Arrayable
 {
     public function __construct(
         private readonly string $index,
@@ -50,5 +51,18 @@ class IndexResponseDto implements ResponseDtoInterface
     public function getVersion(): int
     {
         return $this->version;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'index' => $this->getIndex(),
+            'id' => $this->getId(),
+            'version' => $this->getVersion(),
+            'result' => $this->getResult(),
+            'shards' => $this->getShards()->toArray(),
+            'sequence_number' => $this->getSequenceNumber(),
+            'primary_term' => $this->getPrimaryTerm(),
+        ];
     }
 }

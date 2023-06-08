@@ -2,9 +2,10 @@
 
 namespace Olekjs\Elasticsearch\Dto;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Olekjs\Elasticsearch\Contracts\ResponseDtoInterface;
 
-class SearchResponseDto implements ResponseDtoInterface
+class SearchResponseDto implements ResponseDtoInterface, Arrayable
 {
     public function __construct(
         private readonly int $took,
@@ -32,5 +33,15 @@ class SearchResponseDto implements ResponseDtoInterface
     public function getShards(): ShardsResponseDto
     {
         return $this->shards;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'took' => $this->getTook(),
+            'is_timed_out' => $this->getIsTimedOut(),
+            'shards' => $this->getShards()->toArray(),
+            'results' => $this->getResults()->toArray(),
+        ];
     }
 }

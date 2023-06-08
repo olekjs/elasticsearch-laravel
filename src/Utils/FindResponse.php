@@ -8,7 +8,7 @@ use Olekjs\Elasticsearch\Dto\FindResponseDto;
 
 class FindResponse implements ResponseInterface
 {
-    public static function from(Response $response): FindResponseDto
+    public static function from(Response $response, array $data = []): FindResponseDto
     {
         return new FindResponseDto(
             index: data_get($response, '_index'),

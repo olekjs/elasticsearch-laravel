@@ -9,7 +9,7 @@ use Olekjs\Elasticsearch\Dto\ShardsResponseDto;
 
 class IndexResponse implements ResponseInterface
 {
-    public static function from(Response $response): IndexResponseDto
+    public static function from(Response $response, array $data = []): IndexResponseDto
     {
         return new IndexResponseDto(
             index: data_get($response, '_index'),

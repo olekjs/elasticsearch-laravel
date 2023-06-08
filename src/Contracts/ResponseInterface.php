@@ -6,5 +6,5 @@ use Illuminate\Http\Client\Response;
 
 interface ResponseInterface
 {
-    public static function from(Response $response): ResponseDtoInterface;
+    public static function from(Response $response, array $data = []): ResponseDtoInterface;
 }

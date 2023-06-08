@@ -11,7 +11,7 @@ use Olekjs\Elasticsearch\Dto\ShardsResponseDto;
 
 class SearchResponse implements ResponseInterface
 {
-    public static function from(Response $response): SearchResponseDto
+    public static function from(Response $response, array $data = []): SearchResponseDto
     {
         return new SearchResponseDto(
             took: data_get($response, 'took'),
