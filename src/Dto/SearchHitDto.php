@@ -2,9 +2,10 @@
 
 namespace Olekjs\Elasticsearch\Dto;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Olekjs\Elasticsearch\Contracts\ResponseDtoInterface;
 
-class SearchHitDto implements ResponseDtoInterface
+class SearchHitDto implements ResponseDtoInterface, Arrayable
 {
     public function __construct(
         private readonly string $index,
@@ -32,5 +33,15 @@ class SearchHitDto implements ResponseDtoInterface
     public function getSource(): array
     {
         return $this->source;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'index' => $this->getIndex(),
+            'id' => $this->getId(),
+            'score' => $this->getScore(),
+            'source' => $this->getSource(),
+        ];
     }
 }

@@ -4,6 +4,8 @@ namespace Olekjs\Elasticsearch\Tests\Integration;
 
 use Illuminate\Support\Facades\Http;
 use Olekjs\Elasticsearch\Client;
+use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
+use Olekjs\Elasticsearch\Dto\SearchResponseDto;
 use Olekjs\Elasticsearch\Exceptions\ConflictResponseException;
 use Olekjs\Elasticsearch\Exceptions\DeleteResponseException;
 use Olekjs\Elasticsearch\Exceptions\IndexNotFoundResponseException;
@@ -596,5 +598,63 @@ final class ClientTest extends TestCase
 
         $this->assertSame(4, $result->getSequenceNumber());
         $this->assertSame(1, $result->getPrimaryTerm());
+    }
+
+    public function testCountMethod(): void
+    {
+        Http::fake(function () {
+            return Http::response(
+                file_get_contents('tests/Responses/count_successful_response.json')
+            );
+        });
+
+        $client = new Client();
+
+        $result = $client->count('test');
+
+        $this->assertSame(11, $result);
+    }
+
+    public function testExceptionInCountMethod(): void
+    {
+        $data = json_decode(
+            file_get_contents('tests/Responses/count_exception_response.json'),
+            true
+        );
+
+        $this->expectException(SearchResponseException::class);
+        $this->expectExceptionCode(Response::HTTP_BAD_REQUEST);
+
+        $this->expectExceptionMessage(
+            data_get($data, 'error.reason')
+        );
+
+        Http::fake(function () use ($data) {
+            return Http::response($data, Response::HTTP_BAD_REQUEST);
+        });
+
+        $client = new Client();
+
+        $client->count('test');
+    }
+
+    public function testPaginateMethod(): void
+    {
+        Http::fakeSequence()
+            ->push(file_get_contents('tests/Responses/count_successful_response.json'))
+            ->push(file_get_contents('tests/Responses/paginate_successful_response.json'));
+
+        $client = new Client();
+
+        $result = $client->paginate('test', [], 2, 100);
+
+        $this->assertInstanceOf(PaginateResponseDto::class, $result);
+
+        $this->assertSame(100, $result->getPerPage());
+        $this->assertSame(2, $result->getCurrentPage());
+        $this->assertSame(11, $result->getTotalDocuments());
+        $this->assertSame(1, $result->getTotalPages());
+
+        $this->assertInstanceOf(SearchResponseDto::class, $result->getDocuments());
     }
 }

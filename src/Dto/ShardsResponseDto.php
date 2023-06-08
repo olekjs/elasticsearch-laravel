@@ -2,9 +2,10 @@
 
 namespace Olekjs\Elasticsearch\Dto;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Olekjs\Elasticsearch\Contracts\ResponseDtoInterface;
 
-class ShardsResponseDto implements ResponseDtoInterface
+class ShardsResponseDto implements ResponseDtoInterface, Arrayable
 {
     public function __construct(
         private readonly int $total,
@@ -32,5 +33,15 @@ class ShardsResponseDto implements ResponseDtoInterface
     public function getSkipped(): ?int
     {
         return $this->skipped;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'total' => $this->getTotal(),
+            'successful' => $this->getSuccessful(),
+            'failed' => $this->getFailed(),
+            'skipped' => $this->getSkipped(),
+        ];
     }
 }

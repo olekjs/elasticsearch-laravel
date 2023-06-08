@@ -2,10 +2,17 @@
 
 namespace Olekjs\Elasticsearch\Tests\Unit;
 
+use LogicException;
 use Olekjs\Elasticsearch\Builder\Builder;
 use Olekjs\Elasticsearch\Client;
+use Olekjs\Elasticsearch\Dto\FindResponseDto;
+use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
+use Olekjs\Elasticsearch\Dto\SearchHitsDto;
 use Olekjs\Elasticsearch\Dto\SearchResponseDto;
+use Olekjs\Elasticsearch\Dto\ShardsResponseDto;
+use Olekjs\Elasticsearch\Exceptions\NotFoundResponseException;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Response;
 
 class BuilderTest extends TestCase
 {
@@ -125,5 +132,236 @@ class BuilderTest extends TestCase
             ],
             $builder->getQuery()
         );
+    }
+
+    public function testOrWhereMethod(): void
+    {
+        $builder = Builder::query()
+            ->index('test')
+            ->where('email', 'test@test.com')
+            ->orWhere('username', 'tester');
+
+        $this->assertSame(
+            [
+                'bool' => [
+                    'filter' => [
+                        ['term' => ['email.keyword' => 'test@test.com']]
+                    ],
+                    'should' => [
+                        ['term' => ['username.keyword' => 'tester']],
+                    ]
+                ]
+            ],
+            $builder->getQuery()
+        );
+
+        $builder->orWhere('surname', 'tests');
+
+        $this->assertSame(
+            [
+                'bool' => [
+                    'filter' => [
+                        ['term' => ['email.keyword' => 'test@test.com']]
+                    ],
+                    'should' => [
+                        ['term' => ['username.keyword' => 'tester']],
+                        ['term' => ['surname.keyword' => 'tests']],
+                    ]
+                ]
+            ],
+            $builder->getQuery()
+        );
+    }
+
+    public function testOrWhereLikeMethod(): void
+    {
+        $builder = Builder::query()
+            ->index('test')
+            ->whereLike('email', 'test@test.com')
+            ->orWhereLike('username', 'tester');
+
+        $this->assertSame(
+            [
+                'bool' => [
+                    'filter' => [
+                        ['term' => ['email' => 'test@test.com']]
+                    ],
+                    'should' => [
+                        ['term' => ['username' => 'tester']],
+                    ]
+                ]
+            ],
+            $builder->getQuery()
+        );
+
+        $builder->orWhereLike('surname', 'tests');
+
+        $this->assertSame(
+            [
+                'bool' => [
+                    'filter' => [
+                        ['term' => ['email' => 'test@test.com']]
+                    ],
+                    'should' => [
+                        ['term' => ['username' => 'tester']],
+                        ['term' => ['surname' => 'tests']],
+                    ]
+                ]
+            ],
+            $builder->getQuery()
+        );
+    }
+
+    public function testOrWhereInMethod(): void
+    {
+        $builder = Builder::query()
+            ->index('test')
+            ->whereIn('email', ['test@test.com'])
+            ->orWhereIn('username', ['tester']);
+
+        $this->assertSame(
+            [
+                'bool' => [
+                    'filter' => [
+                        ['terms' => ['email' => ['test@test.com']]]
+                    ],
+                    'should' => [
+                        ['terms' => ['username' => ['tester']]],
+                    ]
+                ]
+            ],
+            $builder->getQuery()
+        );
+
+        $builder->orWhereIn('surname', ['tests']);
+
+        $this->assertSame(
+            [
+                'bool' => [
+                    'filter' => [
+                        ['terms' => ['email' => ['test@test.com']]]
+                    ],
+                    'should' => [
+                        ['terms' => ['username' => ['tester']]],
+                        ['terms' => ['surname' => ['tests']]],
+                    ]
+                ]
+            ],
+            $builder->getQuery()
+        );
+    }
+
+    public function testFindMethod(): void
+    {
+        $client = $this->createMock(Client::class);
+
+        $client
+            ->method('find')
+            ->will(
+                $this->returnValue(
+                    new FindResponseDto(
+                        'test',
+                        '1',
+                        1,
+                        1,
+                        1,
+                        true,
+                        ['_id' => 1]
+                    )
+                )
+            );
+
+        $result = Builder::query($client)->index('test')->find(1);
+
+        $this->assertInstanceOf(FindResponseDto::class, $result);
+
+        $this->assertSame('1', $result->getId());
+        $this->assertSame('test', $result->getIndex());
+    }
+
+    public function testFindOrFailMethod(): void
+    {
+        $this->expectException(NotFoundResponseException::class);
+
+        $client = $this->createMock(Client::class);
+
+        $client
+            ->method('findOrFail')
+            ->will($this->throwException(
+                new NotFoundResponseException('response', Response::HTTP_NOT_FOUND)
+            ));
+
+        Builder::query($client)->index('test')->findOrFail(1);
+    }
+
+    public function testWhereRangeMethod(): void
+    {
+        $builder = Builder::query()->whereRange('test', 10, '>');
+
+        $this->assertSame(
+            ['bool' => ['filter' => [['range' => ['test' => ['>' => 10]]]]]],
+            $builder->getQuery()
+        );
+    }
+
+    public function testWhereBetween(): void
+    {
+        $builder = Builder::query()->whereBetween('test', [10, 20]);
+
+        $this->assertSame(
+            ['bool' => ['filter' => [['range' => ['test' => ['gte' => 10]]], ['range' => ['test' => ['lte' => 20]]]]]],
+            $builder->getQuery()
+        );
+    }
+
+    public function testWhereBetweenInvalidValuesArrayException(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Provide two values');
+
+        Builder::query()->whereBetween('test', [10]);
+    }
+
+    public function testCountMethod(): void
+    {
+        $client = $this->createMock(Client::class);
+
+        $client
+            ->method('count')
+            ->will($this->returnValue(10));
+
+        $result = Builder::query($client)->index('test')->count();
+
+        $this->assertSame(10, $result);
+    }
+
+    public function testPaginateMethod(): void
+    {
+        $client = $this->createMock(Client::class);
+
+        $client
+            ->method('paginate')
+            ->will(
+                $this->returnValue(
+                    new PaginateResponseDto(
+                        100,
+                        10,
+                        11,
+                        1000,
+                        new SearchResponseDto(
+                            1,
+                            false,
+                            new ShardsResponseDto(1, 1, 1),
+                            new SearchHitsDto([], 1.1, [])
+                        )
+                    )
+                )
+            );
+
+        $result = Builder::query($client)->index('test')->paginate(10, 100);
+
+        $this->assertInstanceOf(PaginateResponseDto::class, $result);
+        $this->assertSame(10, $result->getCurrentPage());
+        $this->assertSame(100, $result->getPerPage());
     }
 }

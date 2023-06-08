@@ -1,0 +1,21 @@
+{
+    "error": {
+        "root_cause": [
+            {
+                "type": "parsing_exception",
+                "reason": "unknown query [match_al] did you mean any of [match_all, match, match_none, match_phrase]?",
+                "line": 1,
+                "col": 22
+            }
+        ],
+        "type": "parsing_exception",
+        "reason": "unknown query [match_al] did you mean any of [match_all, match, match_none, match_phrase]?",
+        "line": 1,
+        "col": 22,
+        "caused_by": {
+            "type": "named_object_not_found_exception",
+            "reason": "[1:22] unknown field [match_al]"
+        }
+    },
+    "status": 400
+}
