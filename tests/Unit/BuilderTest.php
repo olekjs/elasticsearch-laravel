@@ -23,18 +23,18 @@ class BuilderTest extends TestCase
         $this->assertSame('test', $builder->getIndex());
     }
 
-    public function testWhereMethod(): void
+    public function testWhereKeywordMethod(): void
     {
-        $builder = Builder::query()->where('email', 'test@test.com');
+        $builder = Builder::query()->whereKeyword('email', 'test@test.com');
 
         $this->assertSame([
             'bool' => ['filter' => [['term' => ['email.keyword' => 'test@test.com']]]]
         ], $builder->getQuery());
     }
 
-    public function testWhereLikeMethod(): void
+    public function testWhereMethod(): void
     {
-        $builder = Builder::query()->whereLike('name', 'test');
+        $builder = Builder::query()->where('name', 'test');
 
         $this->assertSame([
             'bool' => ['filter' => [['term' => ['name' => 'test']]]]
@@ -77,7 +77,7 @@ class BuilderTest extends TestCase
     {
         $builder = Builder::query()->when(
             true,
-            fn(Builder $builder) => $builder->where('email', 'test@test.com')
+            fn(Builder $builder) => $builder->whereKeyword('email', 'test@test.com')
         );
 
         $this->assertSame([
@@ -86,7 +86,7 @@ class BuilderTest extends TestCase
 
         $builder = Builder::query()->when(
             false,
-            fn(Builder $builder) => $builder->where('email', 'test@test.com')
+            fn(Builder $builder) => $builder->whereKeyword('email', 'test@test.com')
         );
 
         $this->assertEmpty($builder->getBody());
@@ -95,9 +95,9 @@ class BuilderTest extends TestCase
     public function testChainedMethods(): void
     {
         $builder = Builder::query()
-            ->where('email', 'test@test.com')
-            ->where('slug', 'test-slug')
-            ->whereLike('name', 'test')
+            ->whereKeyword('email', 'test@test.com')
+            ->whereKeyword('slug', 'test-slug')
+            ->where('name', 'test')
             ->whereIn('_id', [123, 321])
             ->limit(10);
 
@@ -134,12 +134,12 @@ class BuilderTest extends TestCase
         );
     }
 
-    public function testOrWhereMethod(): void
+    public function testOrWhereKeywordMethod(): void
     {
         $builder = Builder::query()
             ->index('test')
-            ->where('email', 'test@test.com')
-            ->orWhere('username', 'tester');
+            ->whereKeyword('email', 'test@test.com')
+            ->orWhereKeyword('username', 'tester');
 
         $this->assertSame(
             [
@@ -155,7 +155,7 @@ class BuilderTest extends TestCase
             $builder->getQuery()
         );
 
-        $builder->orWhere('surname', 'tests');
+        $builder->orWhereKeyword('surname', 'tests');
 
         $this->assertSame(
             [
@@ -173,12 +173,12 @@ class BuilderTest extends TestCase
         );
     }
 
-    public function testOrWhereLikeMethod(): void
+    public function testOrWhereMethod(): void
     {
         $builder = Builder::query()
             ->index('test')
-            ->whereLike('email', 'test@test.com')
-            ->orWhereLike('username', 'tester');
+            ->where('email', 'test@test.com')
+            ->orWhere('username', 'tester');
 
         $this->assertSame(
             [
@@ -194,7 +194,7 @@ class BuilderTest extends TestCase
             $builder->getQuery()
         );
 
-        $builder->orWhereLike('surname', 'tests');
+        $builder->orWhere('surname', 'tests');
 
         $this->assertSame(
             [
@@ -363,5 +363,41 @@ class BuilderTest extends TestCase
         $this->assertInstanceOf(PaginateResponseDto::class, $result);
         $this->assertSame(10, $result->getCurrentPage());
         $this->assertSame(100, $result->getPerPage());
+    }
+
+    public function testWhereLikeMethod(): void
+    {
+        $builder = Builder::query()->whereLike('name', '*test*');
+
+        $this->assertSame([
+            'bool' => ['filter' => [['wildcard' => ['name' => '*test*']]]]
+        ], $builder->getQuery());
+    }
+
+    public function testOrWhereLikeMethod(): void
+    {
+        $builder = Builder::query()->orWhereLike('name', '*test*');
+
+        $this->assertSame([
+            'bool' => ['should' => [['wildcard' => ['name' => '*test*']]]]
+        ], $builder->getQuery());
+    }
+
+    public function testWhereNotMethod(): void
+    {
+        $builder = Builder::query()->whereNot('name', 'test');
+
+        $this->assertSame([
+            'bool' => ['must_not' => [['term' => ['name' => 'test']]]]
+        ], $builder->getQuery());
+    }
+
+    public function testOrWhereNotMethod(): void
+    {
+        $builder = Builder::query()->orWhereNot('name', 'test');
+
+        $this->assertSame([
+            'bool' => ['should' => [['bool' => ['must_not' => [['term' => ['name' => 'test']]]]]]]
+        ], $builder->getQuery());
     }
 }

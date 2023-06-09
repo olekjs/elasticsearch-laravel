@@ -18,17 +18,21 @@ interface BuilderInterface
 
     public function index(string $index): self;
 
-    public function where(string $field, string $value): self;
+    public function whereKeyword(string $field, string $value): self;
 
-    public function orWhere(string $field, string $value): self;
+    public function orWhereKeyword(string $field, string $value): self;
 
-    public function whereLike(string $field, string|int|float|array $value): self;
+    public function where(string $field, string|int|float|array $value): self;
 
-    public function orWhereLike(string $field, string|int|float|array $value): self;
+    public function orWhere(string $field, string|int|float|array $value): self;
 
     public function whereIn(string $field, array $values): self;
 
     public function orWhereIn(string $field, array $values): self;
+
+    public function whereLike(string $field, string|int|float|array $value): self;
+
+    public function orWhereLike(string $field, string|int|float|array $value): self;
 
     public function whereGreaterThan(string $field, int|float $value): self;
 
