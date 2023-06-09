@@ -11,10 +11,11 @@ use Olekjs\Elasticsearch\Dto\SearchResponseDto;
 use Olekjs\Elasticsearch\Dto\ShardsResponseDto;
 use PHPUnit\Framework\TestCase;
 use Illuminate\Contracts\Support\Arrayable;
+use Olekjs\Elasticsearch\Contracts\Collectionable;
 
 class DtosTest extends TestCase
 {
-    public function testDtosAreArrayableMethod(): void
+    public function testDtosAreArrayable(): void
     {
         $dtos = [
             FindResponseDto::class,
@@ -31,5 +32,12 @@ class DtosTest extends TestCase
 
             $this->assertContains(Arrayable::class, $interfaces);
         }
+    }
+
+    public function testSearchResponseIsCollectionable(): void
+    {
+        $interfaces = class_implements(SearchResponseDto::class);
+
+        $this->assertContains(Collectionable::class, $interfaces);
     }
 }

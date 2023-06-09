@@ -2,9 +2,11 @@
 
 namespace Olekjs\Elasticsearch\Tests\Integration;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Olekjs\Elasticsearch\Client;
 use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
+use Olekjs\Elasticsearch\Dto\SearchHitDto;
 use Olekjs\Elasticsearch\Dto\SearchResponseDto;
 use Olekjs\Elasticsearch\Exceptions\ConflictResponseException;
 use Olekjs\Elasticsearch\Exceptions\DeleteResponseException;
@@ -43,10 +45,10 @@ final class ClientTest extends TestCase
 
         $this->assertFalse($result->getIsTimedOut());
 
-        $this->assertSame(['value' => 5, 'relation' => 'eq'], $result->getResults()->getTotal());
-        $this->assertSame(1.0, $result->getResults()->getMaxScore());
+        $this->assertSame(['value' => 5, 'relation' => 'eq'], $result->getResult()->getTotal());
+        $this->assertSame(1.0, $result->getResult()->getMaxScore());
 
-        foreach ($result->getResults()->getHits() as $hit) {
+        foreach ($result->getResult()->getHits() as $hit) {
             $this->assertSame('hello', $hit->getIndex());
             $this->assertSame('183865906814918156', $hit->getId());
             $this->assertSame(1.0, $hit->getScore());
@@ -447,9 +449,9 @@ final class ClientTest extends TestCase
 
         $this->assertFalse($result->getIsTimedOut());
 
-        $this->assertSame(['value' => 0, 'relation' => 'eq'], $result->getResults()->getTotal());
-        $this->assertNull($result->getResults()->getMaxScore());
-        $this->assertEmpty($result->getResults()->getHits());
+        $this->assertSame(['value' => 0, 'relation' => 'eq'], $result->getResult()->getTotal());
+        $this->assertNull($result->getResult()->getMaxScore());
+        $this->assertEmpty($result->getResult()->getHits());
     }
 
     public function testSearchWhereInMethod(): void
@@ -473,10 +475,10 @@ final class ClientTest extends TestCase
 
         $this->assertFalse($result->getIsTimedOut());
 
-        $this->assertSame(['value' => 2, 'relation' => 'eq'], $result->getResults()->getTotal());
-        $this->assertSame(1.0, $result->getResults()->getMaxScore());
+        $this->assertSame(['value' => 2, 'relation' => 'eq'], $result->getResult()->getTotal());
+        $this->assertSame(1.0, $result->getResult()->getMaxScore());
 
-        foreach ($result->getResults()->getHits() as $hit) {
+        foreach ($result->getResult()->getHits() as $hit) {
             $this->assertSame('hello', $hit->getIndex());
             $this->assertSame('183865906814918156', $hit->getId());
             $this->assertSame(1.0, $hit->getScore());
@@ -505,10 +507,10 @@ final class ClientTest extends TestCase
 
         $this->assertFalse($result->getIsTimedOut());
 
-        $this->assertSame(['value' => 1, 'relation' => 'eq'], $result->getResults()->getTotal());
-        $this->assertSame(1.6739764, $result->getResults()->getMaxScore());
+        $this->assertSame(['value' => 1, 'relation' => 'eq'], $result->getResult()->getTotal());
+        $this->assertSame(1.6739764, $result->getResult()->getMaxScore());
 
-        foreach ($result->getResults()->getHits() as $hit) {
+        foreach ($result->getResult()->getHits() as $hit) {
             $this->assertSame('hello', $hit->getIndex());
             $this->assertSame('183865906814918156', $hit->getId());
             $this->assertSame(1.6739764, $hit->getScore());
@@ -537,10 +539,10 @@ final class ClientTest extends TestCase
 
         $this->assertFalse($result->getIsTimedOut());
 
-        $this->assertSame(['value' => 1, 'relation' => 'eq'], $result->getResults()->getTotal());
-        $this->assertSame(1.0, $result->getResults()->getMaxScore());
+        $this->assertSame(['value' => 1, 'relation' => 'eq'], $result->getResult()->getTotal());
+        $this->assertSame(1.0, $result->getResult()->getMaxScore());
 
-        foreach ($result->getResults()->getHits() as $hit) {
+        foreach ($result->getResult()->getHits() as $hit) {
             $this->assertSame('hello', $hit->getIndex());
             $this->assertSame('183865906814918156', $hit->getId());
             $this->assertSame(1.0, $hit->getScore());
@@ -656,5 +658,41 @@ final class ClientTest extends TestCase
         $this->assertSame(1, $result->getTotalPages());
 
         $this->assertInstanceOf(SearchResponseDto::class, $result->getDocuments());
+    }
+
+    public function testSearchResponseCanBeConvertedToCollection(): void
+    {
+        Http::fake(function () {
+            return Http::response(
+                file_get_contents('tests/Responses/search_success_response.json')
+            );
+        });
+
+        $client = new Client();
+
+        $result = $client->search('hello', [
+            'query' => [
+                'match_all' => (object)[]
+            ]
+        ]);
+
+        $this->assertInstanceOf(Collection::class, $result->toCollect());
+
+        /** @var SearchHitDto $hit */
+        foreach ($result->toCollect() as $hit) {
+            $this->assertSame('hello', $hit->getIndex());
+            $this->assertSame('183865906814918156', $hit->getId());
+            $this->assertSame(1.0, $hit->getScore());
+            $this->assertSame(['hello' => 'world'], $hit->getSource());
+        }
+
+        $this->assertInstanceOf(Collection::class, $result->toCollect(asArray: true));
+
+        foreach ($result->toCollect(asArray: true) as $hit) {
+            $this->assertSame('hello', $hit['index']);
+            $this->assertSame('183865906814918156', $hit['id']);
+            $this->assertSame(1.0, $hit['score']);
+            $this->assertSame(['hello' => 'world'], $hit['source']);
+        }
     }
 }
