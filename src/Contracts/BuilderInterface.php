@@ -2,6 +2,7 @@
 
 namespace Olekjs\Elasticsearch\Contracts;
 
+use LogicException;
 use Olekjs\Elasticsearch\Builder\Builder;
 use Olekjs\Elasticsearch\Dto\FindResponseDto;
 use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
@@ -14,6 +15,8 @@ use Olekjs\Elasticsearch\Exceptions\SearchResponseException;
 
 interface BuilderInterface
 {
+    public const ORDER_DESC = 'desc';
+
     public static function query(?ClientInterface $client = null): Builder;
 
     public function index(string $index): self;
@@ -34,6 +37,10 @@ interface BuilderInterface
 
     public function orWhereLike(string $field, string|int|float|array $value): self;
 
+    public function whereNot(string $field, string|int|float|array $value): self;
+
+    public function orWhereNot(string $field, string|int|float|array $value): self;
+
     public function whereGreaterThan(string $field, int|float $value): self;
 
     public function whereLessThan(string $field, int|float $value): self;
@@ -42,9 +49,18 @@ interface BuilderInterface
 
     public function whereRange(string $field, int|float $value, string $operator): self;
 
+    /**
+     * @throws LogicException
+     */
+    public function orderBy(string $field, string $direction = self::ORDER_DESC, ?string $mode = null): self;
+
     public function offset(int $offset): self;
 
     public function limit(int $limit): self;
+
+    public function rawQuery(array $query): self;
+
+    public function rawSort(array $sort): self;
 
     /**
      * @throws IndexNotFoundResponseException
@@ -81,4 +97,6 @@ interface BuilderInterface
     public function getBody(): array;
 
     public function getQuery(): array;
+
+    public function getSort(): array;
 }

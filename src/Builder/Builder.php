@@ -20,9 +20,25 @@ class Builder implements BuilderInterface
 {
     use Conditionable;
 
+    public const ORDER_DESC = 'desc';
+
+    public const ORDER_ASC = 'asc';
+
+    public const ORDER_MIN_MODE = 'min';
+
+    public const ORDER_MAX_MODE = 'max';
+
+    public const ORDER_SUM_MODE = 'sum';
+
+    public const ORDER_AVG_MODE = 'avg';
+
+    public const ORDER_MEDIAN_MODE = 'median';
+
     private string $index;
 
     private array $query;
+
+    private array $sort;
 
     private array $body = [];
 
@@ -145,6 +161,58 @@ class Builder implements BuilderInterface
         return $this;
     }
 
+    /**
+     * @throws LogicException
+     */
+    public function orderBy(string $field, string $direction = self::ORDER_DESC, ?string $mode = null): self
+    {
+        if ($direction !== self::ORDER_DESC && $direction !== self::ORDER_ASC) {
+            throw new LogicException(
+                sprintf(
+                    'Available direction values [%s, %s]. Entered value: [%s]',
+                    self::ORDER_DESC,
+                    self::ORDER_ASC,
+                    $direction,
+                )
+            );
+        }
+
+        $order = match (true) {
+            !is_null($mode) => function () use ($mode, $field, $direction): void {
+                $availableValues = [
+                    self::ORDER_MIN_MODE,
+                    self::ORDER_MAX_MODE,
+                    self::ORDER_SUM_MODE,
+                    self::ORDER_AVG_MODE,
+                    self::ORDER_MEDIAN_MODE,
+                ];
+
+                if (!in_array($mode, $availableValues)) {
+                    throw new LogicException(
+                        sprintf(
+                            'Available direction values [%s, %s, %s, %s, %s]. Entered value: [%s]',
+                            self::ORDER_MIN_MODE,
+                            self::ORDER_MAX_MODE,
+                            self::ORDER_SUM_MODE,
+                            self::ORDER_AVG_MODE,
+                            self::ORDER_MEDIAN_MODE,
+                            $mode,
+                        )
+                    );
+                }
+
+                $this->sort[][$field] = ['order' => $direction, 'mode' => $mode];
+            },
+            is_null($mode) => function () use ($field, $direction): void {
+                $this->sort[][$field] = $direction;
+            }
+        };
+
+        $order();
+
+        return $this;
+    }
+
     public function offset(int $offset): self
     {
         $this->body['from'] = $offset;
@@ -155,6 +223,20 @@ class Builder implements BuilderInterface
     public function limit(int $limit): self
     {
         $this->body['size'] = $limit;
+
+        return $this;
+    }
+
+    public function rawQuery(array $query): self
+    {
+        $this->query = $query;
+
+        return $this;
+    }
+
+    public function rawSort(array $sort): self
+    {
+        $this->sort = $sort;
 
         return $this;
     }
@@ -245,6 +327,11 @@ class Builder implements BuilderInterface
     public function getQuery(): array
     {
         return $this->query;
+    }
+
+    public function getSort(): array
+    {
+        return $this->sort;
     }
 
     private function performSearchBody(): void

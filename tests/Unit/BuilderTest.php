@@ -400,4 +400,97 @@ class BuilderTest extends TestCase
             'bool' => ['should' => [['bool' => ['must_not' => [['term' => ['name' => 'test']]]]]]]
         ], $builder->getQuery());
     }
+
+    public function testOrderByMethod(): void
+    {
+        $builder = Builder::query()->orderBy('name', Builder::ORDER_ASC);
+
+        $this->assertSame([
+            ['name' => Builder::ORDER_ASC]
+        ], $builder->getSort());
+
+        $builder->orderBy('surname');
+
+        $this->assertSame([
+            ['name' => Builder::ORDER_ASC],
+            ['surname' => Builder::ORDER_DESC],
+        ], $builder->getSort());
+    }
+
+    public function testOrderByWithModeMethod(): void
+    {
+        $builder = Builder::query()->orderBy('name', Builder::ORDER_ASC, Builder::ORDER_AVG_MODE);
+
+        $this->assertSame([
+            ['name' => ['order' => Builder::ORDER_ASC, 'mode' => Builder::ORDER_AVG_MODE]]
+        ], $builder->getSort());
+
+        $builder->orderBy('price', Builder::ORDER_DESC, Builder::ORDER_MIN_MODE);
+
+        $this->assertSame([
+            ['name' => ['order' => Builder::ORDER_ASC, 'mode' => Builder::ORDER_AVG_MODE]],
+            ['price' => ['order' => Builder::ORDER_DESC, 'mode' => Builder::ORDER_MIN_MODE]],
+        ], $builder->getSort());
+    }
+
+    public function testOrderByWithInvalidDirectionMethod(): void
+    {
+        $errorMessage = sprintf(
+            'Available direction values [%s, %s]. Entered value: [ascc]',
+            Builder::ORDER_DESC,
+            Builder::ORDER_ASC,
+        );
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage($errorMessage);
+
+        Builder::query()->orderBy('name', 'ascc');
+    }
+
+    public function testOrderByWithInvalidModeMethod(): void
+    {
+        $mode = 'not-exist';
+
+        $errorMessage = sprintf(
+            'Available direction values [%s, %s, %s, %s, %s]. Entered value: [%s]',
+            Builder::ORDER_MIN_MODE,
+            Builder::ORDER_MAX_MODE,
+            Builder::ORDER_SUM_MODE,
+            Builder::ORDER_AVG_MODE,
+            Builder::ORDER_MEDIAN_MODE,
+            $mode,
+        );
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage($errorMessage);
+
+        Builder::query()->orderBy('name', Builder::ORDER_DESC, $mode);
+    }
+
+    public function testRawQueryMethod(): void
+    {
+        $query = [
+            'query' => [
+                'match_all' => (object)[]
+            ]
+        ];
+
+        $builder = Builder::query()->rawQuery($query);
+
+        $this->assertSame($query, $builder->getQuery());
+    }
+
+    public function testRawSortMethod(): void
+    {
+        $sort = [
+            'name' => [
+                'order' => Builder::ORDER_DESC,
+                'mode' => Builder::ORDER_MIN_MODE
+            ]
+        ];
+
+        $builder = Builder::query()->rawSort($sort);
+
+        $this->assertSame($sort, $builder->getSort());
+    }
 }
