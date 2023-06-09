@@ -678,21 +678,8 @@ final class ClientTest extends TestCase
 
         $this->assertInstanceOf(Collection::class, $result->toCollect());
 
-        /** @var SearchHitDto $hit */
-        foreach ($result->toCollect() as $hit) {
-            $this->assertSame('hello', $hit->getIndex());
-            $this->assertSame('183865906814918156', $hit->getId());
-            $this->assertSame(1.0, $hit->getScore());
-            $this->assertSame(['hello' => 'world'], $hit->getSource());
-        }
-
-        $this->assertInstanceOf(Collection::class, $result->toCollect(asArray: true));
-
-        foreach ($result->toCollect(asArray: true) as $hit) {
-            $this->assertSame('hello', $hit['index']);
-            $this->assertSame('183865906814918156', $hit['id']);
-            $this->assertSame(1.0, $hit['score']);
-            $this->assertSame(['hello' => 'world'], $hit['source']);
+        foreach ($result->toCollect() as $source) {
+            $this->assertSame(['hello' => 'world'], $source);
         }
     }
 }

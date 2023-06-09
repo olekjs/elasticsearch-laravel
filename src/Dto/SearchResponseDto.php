@@ -47,19 +47,13 @@ class SearchResponseDto implements ResponseDtoInterface, Arrayable, Collectionab
         ];
     }
 
-    public function toCollect(bool $asArray = false): Collection
+    public function toCollect(): Collection
     {
-        $hitsCollection = $this->getResult()->getHits();
+        $hits = array_map(
+            fn(SearchHitDto $searchHitDto) => $searchHitDto->getSource(),
+            $this->getResult()->getHits()
+        );
 
-        if ($asArray) {
-            $hits = array_map(
-                fn(SearchHitDto $searchHitDto) => $searchHitDto->toArray(),
-                $hitsCollection
-            );
-
-            return Collection::make($hits);
-        }
-
-        return Collection::make($hitsCollection);
+        return Collection::make($hits);
     }
 }
