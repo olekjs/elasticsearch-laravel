@@ -46,28 +46,28 @@ class Builder implements BuilderInterface
         return $this;
     }
 
-    public function where(string $field, string $value): self
+    public function whereKeyword(string $field, string $value): self
     {
         $this->query['bool']['filter'][]['term'][$field . '.keyword'] = $value;
 
         return $this;
     }
 
-    public function orWhere(string $field, string $value): self
+    public function orWhereKeyword(string $field, string $value): self
     {
         $this->query['bool']['should'][]['term'][$field . '.keyword'] = $value;
 
         return $this;
     }
 
-    public function whereLike(string $field, string|int|float|array $value): self
+    public function where(string $field, string|int|float|array $value): self
     {
         $this->query['bool']['filter'][]['term'][$field] = $value;
 
         return $this;
     }
 
-    public function orWhereLike(string $field, string|int|float|array $value): self
+    public function orWhere(string $field, string|int|float|array $value): self
     {
         $this->query['bool']['should'][]['term'][$field] = $value;
 
@@ -84,6 +84,34 @@ class Builder implements BuilderInterface
     public function orWhereIn(string $field, array $values): self
     {
         $this->query['bool']['should'][]['terms'][$field] = $values;
+
+        return $this;
+    }
+
+    public function whereLike(string $field, string|int|float|array $value): self
+    {
+        $this->query['bool']['filter'][]['wildcard'][$field] = $value;
+
+        return $this;
+    }
+
+    public function orWhereLike(string $field, string|int|float|array $value): self
+    {
+        $this->query['bool']['should'][]['wildcard'][$field] = $value;
+
+        return $this;
+    }
+
+    public function whereNot(string $field, string|int|float|array $value): self
+    {
+        $this->query['bool']['must_not'][]['term'][$field] = $value;
+
+        return $this;
+    }
+
+    public function orWhereNot(string $field, string|int|float|array $value): self
+    {
+        $this->query['bool']['should'][]['bool']['must_not'][]['term'][$field] = $value;
 
         return $this;
     }
