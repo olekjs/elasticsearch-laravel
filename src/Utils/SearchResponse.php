@@ -22,7 +22,7 @@ class SearchResponse implements ResponseInterface
                 failed: data_get($response, '_shards.failed'),
                 skipped: data_get($response, '_shards.skipped'),
             ),
-            results: new SearchHitsDto(
+            result: new SearchHitsDto(
                 total: data_get($response, 'hits.total'),
                 maxScore: data_get($response, 'hits.max_score'),
                 hits: array_map(
