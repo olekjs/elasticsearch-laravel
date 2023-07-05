@@ -1,0 +1,13 @@
+{
+    "error": {
+        "root_cause": [
+            {
+                "type": "illegal_argument_exception",
+                "reason": "Malformed action\/metadata line [6], expected field [create], [delete], [index] or [update] but found [s]"
+            }
+        ],
+        "type": "illegal_argument_exception",
+        "reason": "Malformed action\/metadata line [6], expected field [create], [delete], [index] or [update] but found [s]"
+    },
+    "status": 400
+}

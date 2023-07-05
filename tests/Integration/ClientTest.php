@@ -4,9 +4,11 @@ namespace Olekjs\Elasticsearch\Tests\Integration;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
+use Olekjs\Elasticsearch\Bulk\Bulk;
 use Olekjs\Elasticsearch\Client;
+use Olekjs\Elasticsearch\Dto\BulkResponseDto;
+use Olekjs\Elasticsearch\Dto\IndexResponseDto;
 use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
-use Olekjs\Elasticsearch\Dto\SearchHitDto;
 use Olekjs\Elasticsearch\Dto\SearchResponseDto;
 use Olekjs\Elasticsearch\Exceptions\ConflictResponseException;
 use Olekjs\Elasticsearch\Exceptions\DeleteResponseException;
@@ -681,5 +683,58 @@ final class ClientTest extends TestCase
         foreach ($result->toCollect() as $source) {
             $this->assertSame(['hello' => 'world'], $source);
         }
+    }
+
+    public function testSuccessfulBulkMethod(): void
+    {
+        Http::fake(function () {
+            return Http::response(
+                file_get_contents('tests/Responses/bulk_success_response.json')
+            );
+        });
+
+        $client = new Client();
+        $bulk = new Bulk();
+
+        $bulk->add(action: 'index', index: 'products', id: 1, data: ['name' => 'test']);
+
+        $result = $client->bulk($bulk);
+
+        $this->assertInstanceOf(BulkResponseDto::class, $result);
+        $this->assertSame(2, $result->getTook());
+        $this->assertFalse($result->isErrors());
+
+        foreach ($result->getItems() as $item) {
+            $this->assertContains($item->getAction(), ['index', 'update', 'delete']);
+            $this->assertInstanceOf(IndexResponseDto::class, $item->getData());
+        }
+    }
+
+    public function testExceptionInBulkMethod(): void
+    {
+        $data = json_decode(
+            file_get_contents('tests/Responses/bulk_exception_response.json'),
+            true
+        );
+
+        $this->expectException(SearchResponseException::class);
+        $this->expectExceptionCode(Response::HTTP_BAD_REQUEST);
+        $this->expectExceptionMessage(
+            data_get($data, 'error.reason')
+        );
+
+        Http::fake(function () use ($data) {
+            return Http::response(
+                $data,
+                Response::HTTP_BAD_REQUEST
+            );
+        });
+
+        $client = new Client();
+        $bulk = new Bulk();
+
+        $bulk->add(action: 'index', index: 'products', id: 1, data: ['name' => 'test']);
+
+        $client->bulk($bulk);
     }
 }

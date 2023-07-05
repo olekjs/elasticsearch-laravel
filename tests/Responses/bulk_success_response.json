@@ -1,0 +1,86 @@
+{
+    "took": 2,
+    "errors": false,
+    "items": [
+        {
+            "index": {
+                "_index": "products",
+                "_id": "1",
+                "_version": 62,
+                "result": "updated",
+                "_shards": {
+                    "total": 2,
+                    "successful": 1,
+                    "failed": 0
+                },
+                "_seq_no": 246,
+                "_primary_term": 20,
+                "status": 200
+            }
+        },
+        {
+            "index": {
+                "_index": "products",
+                "_id": "2",
+                "_version": 62,
+                "result": "updated",
+                "_shards": {
+                    "total": 2,
+                    "successful": 1,
+                    "failed": 0
+                },
+                "_seq_no": 247,
+                "_primary_term": 20,
+                "status": 200
+            }
+        },
+        {
+            "delete": {
+                "_index": "products",
+                "_id": "190567293472872420",
+                "_version": 1,
+                "result": "not_found",
+                "_shards": {
+                    "total": 2,
+                    "successful": 1,
+                    "failed": 0
+                },
+                "_seq_no": 248,
+                "_primary_term": 20,
+                "status": 404
+            }
+        },
+        {
+            "index": {
+                "_index": "products",
+                "_id": "4",
+                "_version": 61,
+                "result": "updated",
+                "_shards": {
+                    "total": 2,
+                    "successful": 1,
+                    "failed": 0
+                },
+                "_seq_no": 249,
+                "_primary_term": 20,
+                "status": 200
+            }
+        },
+        {
+            "update": {
+                "_index": "products",
+                "_id": "190567293774861409",
+                "_version": 2,
+                "result": "noop",
+                "_shards": {
+                    "total": 2,
+                    "successful": 1,
+                    "failed": 0
+                },
+                "_seq_no": 6,
+                "_primary_term": 20,
+                "status": 200
+            }
+        }
+    ]
+}

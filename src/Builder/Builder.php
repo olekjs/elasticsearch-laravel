@@ -6,7 +6,9 @@ use Illuminate\Support\Traits\Conditionable;
 use LogicException;
 use Olekjs\Elasticsearch\Client;
 use Olekjs\Elasticsearch\Contracts\BuilderInterface;
+use Olekjs\Elasticsearch\Contracts\BulkOperationInterface;
 use Olekjs\Elasticsearch\Contracts\ClientInterface;
+use Olekjs\Elasticsearch\Dto\BulkResponseDto;
 use Olekjs\Elasticsearch\Dto\FindResponseDto;
 use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
 use Olekjs\Elasticsearch\Dto\SearchResponseDto;
@@ -312,6 +314,15 @@ class Builder implements BuilderInterface
         $this->performSearchBody();
 
         return $this->client->paginate($this->index, $this->body, $page, $perPage);
+    }
+
+    /**
+     * @throws SearchResponseException
+     * @throws CoreException
+     */
+    public function bulk(BulkOperationInterface $bulk): BulkResponseDto
+    {
+        return $this->client->bulk($bulk);
     }
 
     public function getIndex(): string

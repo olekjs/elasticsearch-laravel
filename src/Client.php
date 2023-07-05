@@ -2,8 +2,12 @@
 
 namespace Olekjs\Elasticsearch;
 
+use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Support\Facades\Http;
 use Olekjs\Elasticsearch\Contracts\AbstractClient;
+use Olekjs\Elasticsearch\Contracts\BulkOperationInterface;
 use Olekjs\Elasticsearch\Contracts\ClientInterface;
+use Olekjs\Elasticsearch\Dto\BulkResponseDto;
 use Olekjs\Elasticsearch\Dto\IndexResponseDto;
 use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
 use Olekjs\Elasticsearch\Dto\SearchResponseDto;
@@ -16,6 +20,7 @@ use Olekjs\Elasticsearch\Exceptions\IndexResponseException;
 use Olekjs\Elasticsearch\Exceptions\NotFoundResponseException;
 use Olekjs\Elasticsearch\Exceptions\SearchResponseException;
 use Olekjs\Elasticsearch\Exceptions\UpdateResponseException;
+use Olekjs\Elasticsearch\Utils\BulkResponse;
 use Olekjs\Elasticsearch\Utils\FindResponse;
 use Olekjs\Elasticsearch\Utils\IndexResponse;
 use Olekjs\Elasticsearch\Utils\PaginateResponse;
@@ -336,5 +341,23 @@ class Client extends AbstractClient implements ClientInterface
             'total_pages' => $pages,
             'total_documents' => $totalDocuments
         ]);
+    }
+
+    /**
+     * @throws SearchResponseException
+     * @throws CoreException
+     */
+    public function bulk(BulkOperationInterface $bulk): BulkResponseDto
+    {
+        $response = $this->getBaseClient()->withBody($bulk->toRequestJson())->post('_bulk');
+
+        if ($response->clientError()) {
+            $this->throwSearchResponseException(
+                data_get($response, 'error.reason'),
+                $response->status(),
+            );
+        }
+
+        return BulkResponse::from($response);
     }
 }

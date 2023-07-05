@@ -4,6 +4,7 @@ namespace Olekjs\Elasticsearch\Contracts;
 
 use LogicException;
 use Olekjs\Elasticsearch\Builder\Builder;
+use Olekjs\Elasticsearch\Dto\BulkResponseDto;
 use Olekjs\Elasticsearch\Dto\FindResponseDto;
 use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
 use Olekjs\Elasticsearch\Dto\SearchResponseDto;
@@ -91,6 +92,12 @@ interface BuilderInterface
      * @throws CoreException
      */
     public function paginate(int $page = 1, int $perPage = 25): PaginateResponseDto;
+
+    /**
+     * @throws SearchResponseException
+     * @throws CoreException
+     */
+    public function bulk(BulkOperationInterface $bulk): BulkResponseDto;
 
     public function getIndex(): string;
 
