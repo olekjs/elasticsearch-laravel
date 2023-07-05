@@ -2,6 +2,7 @@
 
 namespace Olekjs\Elasticsearch\Contracts;
 
+use Olekjs\Elasticsearch\Dto\BulkResponseDto;
 use Olekjs\Elasticsearch\Dto\FindResponseDto;
 use Olekjs\Elasticsearch\Dto\IndexResponseDto;
 use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
@@ -101,4 +102,10 @@ interface ClientInterface
      * @throws CoreException
      */
     public function paginate(string $index, array $data = [], int $page = 1, int $perPage = 25): PaginateResponseDto;
+
+    /**
+     * @throws SearchResponseException
+     * @throws CoreException
+     */
+    public function bulk(BulkOperationInterface $bulk): BulkResponseDto;
 }

@@ -4,7 +4,9 @@ namespace Olekjs\Elasticsearch\Tests\Unit;
 
 use LogicException;
 use Olekjs\Elasticsearch\Builder\Builder;
+use Olekjs\Elasticsearch\Bulk\Bulk;
 use Olekjs\Elasticsearch\Client;
+use Olekjs\Elasticsearch\Dto\BulkResponseDto;
 use Olekjs\Elasticsearch\Dto\FindResponseDto;
 use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
 use Olekjs\Elasticsearch\Dto\SearchHitsDto;
@@ -492,5 +494,25 @@ class BuilderTest extends TestCase
         $builder = Builder::query()->rawSort($sort);
 
         $this->assertSame($sort, $builder->getSort());
+    }
+
+    public function testBulkMethod(): void
+    {
+        $client = $this->getMockBuilder(Client::class)->getMock();
+
+        $bulk = new Bulk();
+
+        $bulk->add(action: 'index', index: 'products', id: 1, data: ['name' => 'test']);
+        $bulk->add(action: 'update', index: 'products', id: 2, data: ['name' => 'test']);
+        $bulk->add(action: 'delete', index: 'products', id: 3);
+
+        $bulk->addMany([
+            ['action' => 'delete', 'index' => 'products', 'id' => 4, 'data' => []],
+            ['action' => 'update', 'index' => 'products', 'id' => 5, 'data' => ['name' => 'test']],
+        ]);
+
+        $result = Builder::query($client)->bulk($bulk);
+
+        $this->assertInstanceOf(BulkResponseDto::class, $result);
     }
 }
