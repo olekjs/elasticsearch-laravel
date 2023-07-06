@@ -8,6 +8,7 @@ use Olekjs\Elasticsearch\Bulk\Bulk;
 use Olekjs\Elasticsearch\Client;
 use Olekjs\Elasticsearch\Dto\BulkResponseDto;
 use Olekjs\Elasticsearch\Dto\FindResponseDto;
+use Olekjs\Elasticsearch\Dto\IndexResponseDto;
 use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
 use Olekjs\Elasticsearch\Dto\SearchHitsDto;
 use Olekjs\Elasticsearch\Dto\SearchResponseDto;
@@ -514,5 +515,32 @@ class BuilderTest extends TestCase
         $result = Builder::query($client)->bulk($bulk);
 
         $this->assertInstanceOf(BulkResponseDto::class, $result);
+    }
+
+    public function testCreateMethod(): void
+    {
+        $client = $this->getMockBuilder(Client::class)->getMock();
+
+        $result = Builder::query($client)->index('test')->create(1, []);
+
+        $this->assertInstanceOf(IndexResponseDto::class, $result);
+    }
+
+    public function testUpdateMethod(): void
+    {
+        $client = $this->getMockBuilder(Client::class)->getMock();
+
+        $result = Builder::query($client)->index('test')->update(1, ['name' => 'test']);
+
+        $this->assertInstanceOf(IndexResponseDto::class, $result);
+    }
+
+    public function testDeleteMethod(): void
+    {
+        $client = $this->getMockBuilder(Client::class)->getMock();
+
+        $result = Builder::query($client)->index('test')->delete(1);
+
+        $this->assertInstanceOf(IndexResponseDto::class, $result);
     }
 }

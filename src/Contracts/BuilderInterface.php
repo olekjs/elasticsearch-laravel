@@ -6,13 +6,18 @@ use LogicException;
 use Olekjs\Elasticsearch\Builder\Builder;
 use Olekjs\Elasticsearch\Dto\BulkResponseDto;
 use Olekjs\Elasticsearch\Dto\FindResponseDto;
+use Olekjs\Elasticsearch\Dto\IndexResponseDto;
 use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
 use Olekjs\Elasticsearch\Dto\SearchResponseDto;
+use Olekjs\Elasticsearch\Exceptions\ConflictResponseException;
 use Olekjs\Elasticsearch\Exceptions\CoreException;
+use Olekjs\Elasticsearch\Exceptions\DeleteResponseException;
 use Olekjs\Elasticsearch\Exceptions\FindResponseException;
 use Olekjs\Elasticsearch\Exceptions\IndexNotFoundResponseException;
+use Olekjs\Elasticsearch\Exceptions\IndexResponseException;
 use Olekjs\Elasticsearch\Exceptions\NotFoundResponseException;
 use Olekjs\Elasticsearch\Exceptions\SearchResponseException;
+use Olekjs\Elasticsearch\Exceptions\UpdateResponseException;
 
 interface BuilderInterface
 {
@@ -98,6 +103,30 @@ interface BuilderInterface
      * @throws CoreException
      */
     public function bulk(BulkOperationInterface $bulk): BulkResponseDto;
+
+    /**
+     * @throws IndexResponseException
+     */
+    public function create(string|int $id, array $data): IndexResponseDto;
+
+    /**
+     * @throws NotFoundResponseException
+     * @throws UpdateResponseException
+     * @throws ConflictResponseException
+     */
+    public function update(
+        string|int $id,
+        array $data = [],
+        array $script = [],
+        ?int $primaryTerm = null,
+        ?int $sequenceNumber = null
+    ): IndexResponseDto;
+
+    /**
+     * @throws DeleteResponseException
+     * @throws NotFoundResponseException
+     */
+    public function delete(string|int $id): IndexResponseDto;
 
     public function getIndex(): string;
 
