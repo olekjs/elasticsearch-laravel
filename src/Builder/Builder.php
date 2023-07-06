@@ -10,13 +10,18 @@ use Olekjs\Elasticsearch\Contracts\BulkOperationInterface;
 use Olekjs\Elasticsearch\Contracts\ClientInterface;
 use Olekjs\Elasticsearch\Dto\BulkResponseDto;
 use Olekjs\Elasticsearch\Dto\FindResponseDto;
+use Olekjs\Elasticsearch\Dto\IndexResponseDto;
 use Olekjs\Elasticsearch\Dto\PaginateResponseDto;
 use Olekjs\Elasticsearch\Dto\SearchResponseDto;
+use Olekjs\Elasticsearch\Exceptions\ConflictResponseException;
 use Olekjs\Elasticsearch\Exceptions\CoreException;
+use Olekjs\Elasticsearch\Exceptions\DeleteResponseException;
 use Olekjs\Elasticsearch\Exceptions\FindResponseException;
 use Olekjs\Elasticsearch\Exceptions\IndexNotFoundResponseException;
+use Olekjs\Elasticsearch\Exceptions\IndexResponseException;
 use Olekjs\Elasticsearch\Exceptions\NotFoundResponseException;
 use Olekjs\Elasticsearch\Exceptions\SearchResponseException;
+use Olekjs\Elasticsearch\Exceptions\UpdateResponseException;
 
 class Builder implements BuilderInterface
 {
@@ -323,6 +328,50 @@ class Builder implements BuilderInterface
     public function bulk(BulkOperationInterface $bulk): BulkResponseDto
     {
         return $this->client->bulk($bulk);
+    }
+
+    /**
+     * @throws IndexResponseException
+     */
+    public function create(string|int $id, array $data): IndexResponseDto
+    {
+        if (!isset($this->index)) {
+            throw new LogicException('Index name is required.');
+        }
+
+        return $this->client->create($this->index, $id, $data);
+    }
+
+    /**
+     * @throws NotFoundResponseException
+     * @throws UpdateResponseException
+     * @throws ConflictResponseException
+     */
+    public function update(
+        string|int $id,
+        array $data = [],
+        array $script = [],
+        ?int $primaryTerm = null,
+        ?int $sequenceNumber = null
+    ): IndexResponseDto {
+        if (!isset($this->index)) {
+            throw new LogicException('Index name is required.');
+        }
+
+        return $this->client->update($this->index, $id, $data, $script, $primaryTerm, $sequenceNumber);
+    }
+
+    /**
+     * @throws DeleteResponseException
+     * @throws NotFoundResponseException
+     */
+    public function delete(string|int $id): IndexResponseDto
+    {
+        if (!isset($this->index)) {
+            throw new LogicException('Index name is required.');
+        }
+
+        return $this->client->delete($this->index, $id);
     }
 
     public function getIndex(): string
