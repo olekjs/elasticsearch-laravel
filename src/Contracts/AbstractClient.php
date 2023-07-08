@@ -4,6 +4,8 @@ namespace Olekjs\Elasticsearch\Contracts;
 
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use Illuminate\Support\Stringable;
 use Olekjs\Elasticsearch\Exceptions\ConflictResponseException;
 use Olekjs\Elasticsearch\Exceptions\DeleteResponseException;
 use Olekjs\Elasticsearch\Exceptions\IndexNotFoundResponseException;
@@ -17,9 +19,21 @@ abstract class AbstractClient
 {
     protected function getBaseClient(): PendingRequest
     {
-        return Http::acceptJson()
+        $apiKey = config('services.elasticsearch.api_key');
+        $port = config('services.elasticsearch.port');
+
+        $url = Str::of(config('services.elasticsearch.url'))
+            ->when(!is_null($port), fn(Stringable $str) => $str->append(':' . $port));
+
+        $http = Http::acceptJson()
             ->asJson()
-            ->baseUrl(config('services.elasticsearch.url'));
+            ->baseUrl($url);
+
+        if (!is_null($apiKey)) {
+            $http->withToken($apiKey, 'ApiKey');
+        }
+
+        return $http;
     }
 
     /**

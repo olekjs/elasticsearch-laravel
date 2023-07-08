@@ -2,8 +2,6 @@
 
 namespace Olekjs\Elasticsearch;
 
-use Illuminate\Contracts\Support\Jsonable;
-use Illuminate\Support\Facades\Http;
 use Olekjs\Elasticsearch\Contracts\AbstractClient;
 use Olekjs\Elasticsearch\Contracts\BulkOperationInterface;
 use Olekjs\Elasticsearch\Contracts\ClientInterface;
