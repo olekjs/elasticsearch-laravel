@@ -47,6 +47,8 @@ class Builder implements BuilderInterface
 
     private array $sort;
 
+    private array $select;
+
     private array $body = [];
 
     public function __construct(private readonly ClientInterface $client)
@@ -248,6 +250,17 @@ class Builder implements BuilderInterface
         return $this;
     }
 
+    public function select(mixed $fields): self
+    {
+        $fields = is_array($fields) ? $fields : func_get_args();
+
+        foreach ($fields as $field) {
+            $this->select[] = $field;
+        }
+
+        return $this;
+    }
+
     /**
      * @throws IndexNotFoundResponseException
      * @throws FindResponseException
@@ -394,10 +407,19 @@ class Builder implements BuilderInterface
         return $this->sort;
     }
 
-    private function performSearchBody(): void
+    public function getSelect(): array
+    {
+        return $this->select;
+    }
+
+    public function performSearchBody(): void
     {
         if (isset($this->query)) {
             $this->body['query'] = $this->query;
+        }
+
+        if (isset($this->select)) {
+            $this->body['_source'] = $this->select;
         }
 
         if (empty($this->body)) {
