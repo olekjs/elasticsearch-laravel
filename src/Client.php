@@ -275,6 +275,10 @@ class Client extends AbstractClient implements ClientInterface
      */
     public function count(string $index, array $data = []): int
     {
+        if (isset($data['_source'])) {
+            unset($data['_source']);
+        }
+
         if (empty($data)) {
             $data = [
                 'query' => [
