@@ -68,6 +68,8 @@ interface BuilderInterface
 
     public function rawSort(array $sort): self;
 
+    public function select(mixed $fields): self;
+
     /**
      * @throws IndexNotFoundResponseException
      * @throws FindResponseException
@@ -135,4 +137,8 @@ interface BuilderInterface
     public function getQuery(): array;
 
     public function getSort(): array;
+
+    public function getSelect(): array;
+
+    public function performSearchBody(): void;
 }

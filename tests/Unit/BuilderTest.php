@@ -543,4 +543,20 @@ class BuilderTest extends TestCase
 
         $this->assertInstanceOf(IndexResponseDto::class, $result);
     }
+
+    public function testSelectMethod(): void
+    {
+        $expected = ['test', 'test1', 'test2', 'test3', 'test4'];
+
+        $builder = Builder::query()
+            ->select('test')
+            ->select(['test1', 'test2'])
+            ->select('test3', 'test4');
+
+        $this->assertSame($expected, $builder->getSelect());
+
+        $builder->performSearchBody();
+
+        $this->assertSame(['_source' => $expected], $builder->getBody());
+    }
 }
