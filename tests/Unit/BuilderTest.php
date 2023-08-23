@@ -3,6 +3,7 @@
 namespace Olekjs\Elasticsearch\Tests\Unit;
 
 use LogicException;
+use Olekjs\Elasticsearch\Aggregation\Aggregation;
 use Olekjs\Elasticsearch\Builder\Builder;
 use Olekjs\Elasticsearch\Bulk\Bulk;
 use Olekjs\Elasticsearch\Client;
@@ -558,5 +559,50 @@ class BuilderTest extends TestCase
         $builder->performSearchBody();
 
         $this->assertSame(['_source' => $expected], $builder->getBody());
+    }
+
+    public function testWithAggregationMethod(): void
+    {
+        $categoryAggregation = new Aggregation(
+            'category-aggregation',
+            [
+                'terms' => [
+                    'category' => 'test'
+                ]
+            ]
+        );
+
+        $priceAggregation = new Aggregation(
+            'price-aggregation',
+            [
+                'max' => [
+                    'field' => 'price'
+                ]
+            ]
+        );
+
+        $builder = Builder::query()
+            ->withAggregation($categoryAggregation)
+            ->withAggregation($priceAggregation);
+
+        $builder->performSearchBody();
+
+        $this->assertSame(
+            [
+                'aggs' => [
+                    'category-aggregation' => [
+                        'terms' => [
+                            'category' => 'test'
+                        ]
+                    ],
+                    'price-aggregation' => [
+                        'max' => [
+                            'field' => 'price'
+                        ]
+                    ]
+                ]
+            ],
+            $builder->getBody()
+        );
     }
 }

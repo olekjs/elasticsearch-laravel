@@ -5,6 +5,7 @@ namespace Olekjs\Elasticsearch\Builder;
 use Illuminate\Support\Traits\Conditionable;
 use LogicException;
 use Olekjs\Elasticsearch\Client;
+use Olekjs\Elasticsearch\Contracts\AggregationInterface;
 use Olekjs\Elasticsearch\Contracts\BuilderInterface;
 use Olekjs\Elasticsearch\Contracts\BulkOperationInterface;
 use Olekjs\Elasticsearch\Contracts\ClientInterface;
@@ -48,6 +49,9 @@ class Builder implements BuilderInterface
     private array $sort;
 
     private array $select;
+
+    /** @var AggregationInterface[] $aggregations */
+    private array $aggregations;
 
     private array $body = [];
 
@@ -218,6 +222,13 @@ class Builder implements BuilderInterface
         };
 
         $order();
+
+        return $this;
+    }
+
+    public function withAggregation(AggregationInterface $aggregation): self
+    {
+        $this->aggregations[] = $aggregation;
 
         return $this;
     }
@@ -420,6 +431,12 @@ class Builder implements BuilderInterface
 
         if (isset($this->select)) {
             $this->body['_source'] = $this->select;
+        }
+
+        if (isset($this->aggregations)) {
+            $this->body['aggs'] = collect($this->aggregations)
+                ->mapWithKeys(fn(AggregationInterface $aggregation): array => $aggregation->toRequestArray())
+                ->toArray();
         }
 
         if (empty($this->body)) {

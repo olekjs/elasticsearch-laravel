@@ -34,7 +34,8 @@ class SearchResponse implements ResponseInterface
                     ),
                     data_get($response, 'hits.hits'),
                 )
-            )
+            ),
+            aggregations: data_get($response, 'aggregations', [])
         );
     }
 }
