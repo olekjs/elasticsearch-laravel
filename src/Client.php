@@ -279,6 +279,10 @@ class Client extends AbstractClient implements ClientInterface
             unset($data['_source']);
         }
 
+        if (isset($data['aggs'])) {
+            unset($data['aggs']);
+        }
+
         if (empty($data)) {
             $data = [
                 'query' => [

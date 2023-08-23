@@ -60,6 +60,8 @@ interface BuilderInterface
      */
     public function orderBy(string $field, string $direction = self::ORDER_DESC, ?string $mode = null): self;
 
+    public function withAggregation(AggregationInterface $aggregation): self;
+
     public function offset(int $offset): self;
 
     public function limit(int $limit): self;

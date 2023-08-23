@@ -4,6 +4,7 @@ namespace Olekjs\Elasticsearch\Dto;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
+use Olekjs\Elasticsearch\Contracts\AggregationInterface;
 use Olekjs\Elasticsearch\Contracts\Collectionable;
 use Olekjs\Elasticsearch\Contracts\ResponseDtoInterface;
 
@@ -14,6 +15,7 @@ class SearchResponseDto implements ResponseDtoInterface, Arrayable, Collectionab
         private readonly bool $isTimedOut,
         private readonly ShardsResponseDto $shards,
         private readonly SearchHitsDto $result,
+        private readonly array $aggregations = [],
     ) {
     }
 
@@ -37,6 +39,11 @@ class SearchResponseDto implements ResponseDtoInterface, Arrayable, Collectionab
         return $this->shards;
     }
 
+    public function getAggregations(): array
+    {
+        return $this->aggregations;
+    }
+
     public function toArray(): array
     {
         return [
@@ -44,6 +51,7 @@ class SearchResponseDto implements ResponseDtoInterface, Arrayable, Collectionab
             'is_timed_out' => $this->getIsTimedOut(),
             'shards' => $this->getShards()->toArray(),
             'results' => $this->getResult()->toArray(),
+            'aggregations' => $this->getAggregations(),
         ];
     }
 
