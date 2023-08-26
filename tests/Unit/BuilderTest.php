@@ -7,6 +7,7 @@ use Olekjs\Elasticsearch\Aggregation\Aggregation;
 use Olekjs\Elasticsearch\Builder\Builder;
 use Olekjs\Elasticsearch\Bulk\Bulk;
 use Olekjs\Elasticsearch\Client;
+use Olekjs\Elasticsearch\Contracts\BuilderInterface;
 use Olekjs\Elasticsearch\Dto\BulkResponseDto;
 use Olekjs\Elasticsearch\Dto\FindResponseDto;
 use Olekjs\Elasticsearch\Dto\IndexResponseDto;
@@ -604,5 +605,137 @@ class BuilderTest extends TestCase
             ],
             $builder->getBody()
         );
+    }
+
+    /**
+     * @dataProvider whereNestedDataProvider
+     */
+    public function testWhereNestedMethod(\Closure $builder, array $actual): void
+    {
+        $expected = $builder();
+
+        $this->assertSame($expected, $actual);
+    }
+
+    public static function whereNestedDataProvider(): iterable
+    {
+        yield [
+            function () {
+                $builder = Builder::query();
+
+                $builder->whereNested('nested_path', function (BuilderInterface $builder) {
+                    return $builder->whereIn('test', [1, 2, 3]);
+                });
+
+                $builder->performSearchBody();
+
+                return $builder->getBody();
+            },
+            [
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            [
+                                'nested' => [
+                                    'path' => 'nested_path',
+                                    'query' => [
+                                        'bool' => ['filter' => [['terms' => ['test' => [1, 2, 3]]]]]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+        ];
+        yield [
+            function () {
+                $builder = Builder::query();
+
+                $builder->whereNested('nested_path', function (BuilderInterface $builder) {
+                    return $builder
+                        ->where('test', 1)
+                        ->where('test_2', 2);
+                });
+
+                $builder->performSearchBody();
+
+                return $builder->getBody();
+            },
+            [
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            [
+                                'nested' => [
+                                    'path' => 'nested_path',
+                                    'query' => [
+                                        'bool' => [
+                                            'filter' => [
+                                                ['term' => ['test' => 1]],
+                                                ['term' => ['test_2' => 2]],
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+        ];
+        yield [
+            function () {
+                $builder = Builder::query();
+
+                $builder->where('test_1', 1);
+
+                $builder->whereNested('nested_path', function (BuilderInterface $builder) {
+                    return $builder->where('test_2', 2);
+                });
+
+                $builder->where('test_3', 3);
+
+                $builder->performSearchBody();
+
+                return $builder->getBody();
+            },
+            [
+                'query' => [
+                    'bool' => [
+                        'must' => [
+                            [
+                                'nested' => [
+                                    'path' => 'nested_path',
+                                    'query' => [
+                                        'bool' => [
+                                            'filter' => [
+                                                ['term' => ['test_2' => 2]],
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ],
+                            [
+                                'bool' => [
+                                    'filter' => [
+                                        [
+                                            'term' => [
+                                                'test_1' => 1,
+                                            ]
+                                        ],
+                                        [
+                                            'term' => [
+                                                'test_3' => 3,
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+        ];
     }
 }

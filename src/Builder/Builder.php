@@ -2,6 +2,7 @@
 
 namespace Olekjs\Elasticsearch\Builder;
 
+use Closure;
 use Illuminate\Support\Traits\Conditionable;
 use LogicException;
 use Olekjs\Elasticsearch\Client;
@@ -55,7 +56,9 @@ class Builder implements BuilderInterface
 
     private array $body = [];
 
-    public function __construct(private readonly ClientInterface $client)
+    private array $nested = [];
+
+    public function __construct(private readonly ClientInterface $client = new Client())
     {
     }
 
@@ -170,6 +173,21 @@ class Builder implements BuilderInterface
     public function whereRange(string $field, int|float $value, string $operator): self
     {
         $this->query['bool']['filter'][]['range'][$field][$operator] = $value;
+
+        return $this;
+    }
+
+    public function whereNested(string $path, Closure $closure): self
+    {
+        /** @var BuilderInterface $builder */
+        $builder = $closure(new self());
+
+        $this->nested[] = [
+            'nested' => [
+                'path' => $path,
+                'query' => $builder->getQuery(),
+            ]
+        ];
 
         return $this;
     }
@@ -423,10 +441,25 @@ class Builder implements BuilderInterface
         return $this->select;
     }
 
+    public function getNested(): array
+    {
+        return $this->nested;
+    }
+
     public function performSearchBody(): void
     {
+        if (isset($this->nested)) {
+            foreach ($this->nested as $nested) {
+                $this->body['query']['bool']['must'][] = $nested;
+            }
+        }
+
         if (isset($this->query)) {
-            $this->body['query'] = $this->query;
+            if (isset($this->nested)) {
+                $this->body['query']['bool']['must'][] = $this->query;
+            } else {
+                $this->body['query'] = $this->query;
+            }
         }
 
         if (isset($this->select)) {
