@@ -2,6 +2,7 @@
 
 namespace Olekjs\Elasticsearch\Contracts;
 
+use Closure;
 use LogicException;
 use Olekjs\Elasticsearch\Builder\Builder;
 use Olekjs\Elasticsearch\Dto\BulkResponseDto;
@@ -54,6 +55,8 @@ interface BuilderInterface
     public function whereBetween(string $field, array $values): self;
 
     public function whereRange(string $field, int|float $value, string $operator): self;
+
+    public function whereNested(string $path, Closure $closure): self;
 
     /**
      * @throws LogicException
@@ -141,6 +144,8 @@ interface BuilderInterface
     public function getSort(): array;
 
     public function getSelect(): array;
+
+    public function getNested(): array;
 
     public function performSearchBody(): void;
 }
