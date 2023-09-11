@@ -448,6 +448,10 @@ class Builder implements BuilderInterface
 
     public function performSearchBody(): void
     {
+        if (isset($this->sort)) {
+            $this->body['sort'] = $this->sort;
+        }
+
         if (isset($this->nested)) {
             foreach ($this->nested as $nested) {
                 $this->body['query']['bool']['must'][] = $nested;

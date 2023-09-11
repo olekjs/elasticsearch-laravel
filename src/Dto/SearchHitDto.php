@@ -10,7 +10,7 @@ class SearchHitDto implements ResponseDtoInterface, Arrayable
     public function __construct(
         private readonly string $index,
         private readonly string $id,
-        private readonly float $score,
+        private readonly ?float $score,
         private readonly array $source,
     ) {
     }
@@ -25,7 +25,7 @@ class SearchHitDto implements ResponseDtoInterface, Arrayable
         return $this->id;
     }
 
-    public function getScore(): float
+    public function getScore(): ?float
     {
         return $this->score;
     }
