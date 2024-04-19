@@ -20,7 +20,7 @@ use Olekjs\Elasticsearch\Exceptions\UpdateResponseException;
 use Olekjs\Elasticsearch\Tests\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
-final class ClientTest extends TestCase
+class ClientTest extends TestCase
 {
     public function testSearchMethod(): void
     {

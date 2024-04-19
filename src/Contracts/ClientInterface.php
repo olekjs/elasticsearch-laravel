@@ -2,6 +2,7 @@
 
 namespace Olekjs\Elasticsearch\Contracts;
 
+use Illuminate\Http\Client\PendingRequest;
 use Olekjs\Elasticsearch\Dto\BulkResponseDto;
 use Olekjs\Elasticsearch\Dto\FindResponseDto;
 use Olekjs\Elasticsearch\Dto\IndexResponseDto;
@@ -16,6 +17,7 @@ use Olekjs\Elasticsearch\Exceptions\IndexResponseException;
 use Olekjs\Elasticsearch\Exceptions\NotFoundResponseException;
 use Olekjs\Elasticsearch\Exceptions\SearchResponseException;
 use Olekjs\Elasticsearch\Exceptions\UpdateResponseException;
+use Symfony\Component\HttpFoundation\Response;
 
 interface ClientInterface
 {
@@ -108,4 +110,41 @@ interface ClientInterface
      * @throws CoreException
      */
     public function bulk(BulkOperationInterface $bulk): BulkResponseDto;
+
+    public function getBaseClient(): PendingRequest;
+
+    /**
+     * @throws NotFoundResponseException
+     */
+    public function throwNotFoundException(string $message, int $code = Response::HTTP_NOT_FOUND): void;
+
+    /**
+     * @throws IndexNotFoundResponseException
+     */
+    public function throwIndexNotFoundException(string $message, int $code = Response::HTTP_NOT_FOUND): void;
+
+    /**
+     * @throws SearchResponseException
+     */
+    public function throwSearchResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void;
+
+    /**
+     * @throws IndexResponseException
+     */
+    public function throwIndexResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void;
+
+    /**
+     * @throws DeleteResponseException
+     */
+    public function throwDeleteResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void;
+
+    /**
+     * @throws UpdateResponseException
+     */
+    public function throwUpdateResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void;
+
+    /**
+     * @throws ConflictResponseException
+     */
+    public function throwConflictResponseException(string $message, int $code = Response::HTTP_CONFLICT): void;
 }

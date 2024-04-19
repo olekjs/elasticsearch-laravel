@@ -103,7 +103,7 @@ class Client extends AbstractClient implements ClientInterface
 
         if ($response->clientError()) {
             $this->throwIndexResponseException(
-                json_encode($response->json()),
+                json_encode($response->json(), JSON_THROW_ON_ERROR),
                 $response->status()
             );
         }
@@ -132,7 +132,7 @@ class Client extends AbstractClient implements ClientInterface
                 'if_seq_no' => $sequenceNumber,
             ]);
 
-            $baseUrl = $baseUrl . '?' . $strictUrl;
+            $baseUrl .= '?' . $strictUrl;
         }
 
         $body = match (true) {
@@ -145,7 +145,7 @@ class Client extends AbstractClient implements ClientInterface
 
         if ($response->notFound() && data_get($response, 'status') === SymfonyResponse::HTTP_NOT_FOUND) {
             $this->throwNotFoundException(
-                json_encode($response->json())
+                json_encode($response->json(), JSON_THROW_ON_ERROR)
             );
         }
 
@@ -156,13 +156,13 @@ class Client extends AbstractClient implements ClientInterface
             && data_get($response, 'status') === SymfonyResponse::HTTP_CONFLICT
         ) {
             $this->throwConflictResponseException(
-                json_encode($response->json())
+                json_encode($response->json(), JSON_THROW_ON_ERROR)
             );
         }
 
         if ($response->clientError()) {
             $this->throwUpdateResponseException(
-                json_encode($response->json()),
+                json_encode($response->json(), JSON_THROW_ON_ERROR),
                 $response->status()
             );
         }
@@ -181,13 +181,13 @@ class Client extends AbstractClient implements ClientInterface
 
         if ($response->notFound() && data_get($response, 'result') === 'not_found') {
             $this->throwNotFoundException(
-                json_encode($response->json())
+                json_encode($response->json(), JSON_THROW_ON_ERROR)
             );
         }
 
         if ($response->clientError()) {
             $this->throwDeleteResponseException(
-                json_encode($response->json()),
+                json_encode($response->json(), JSON_THROW_ON_ERROR),
                 $response->status()
             );
         }

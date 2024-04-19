@@ -1,0 +1,12 @@
+{
+    "test_1": {
+        "aliases": {
+            "alias_test": {}
+        }
+    },
+    "test_2": {
+        "aliases": {
+            "alias_test": {}
+        }
+    }
+}
