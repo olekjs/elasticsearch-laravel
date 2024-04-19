@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 abstract class AbstractClient
 {
-    protected function getBaseClient(): PendingRequest
+    public function getBaseClient(): PendingRequest
     {
         $apiKey = config('services.elasticsearch.api_key');
         $port = config('services.elasticsearch.port');
@@ -39,7 +39,7 @@ abstract class AbstractClient
     /**
      * @throws NotFoundResponseException
      */
-    protected function throwNotFoundException(string $message, int $code = Response::HTTP_NOT_FOUND): void
+    public function throwNotFoundException(string $message, int $code = Response::HTTP_NOT_FOUND): void
     {
         throw new NotFoundResponseException(
             $message,
@@ -50,7 +50,7 @@ abstract class AbstractClient
     /**
      * @throws IndexNotFoundResponseException
      */
-    protected function throwIndexNotFoundException(string $message, int $code = Response::HTTP_NOT_FOUND): void
+    public function throwIndexNotFoundException(string $message, int $code = Response::HTTP_NOT_FOUND): void
     {
         throw new IndexNotFoundResponseException(
             $message,
@@ -61,7 +61,7 @@ abstract class AbstractClient
     /**
      * @throws SearchResponseException
      */
-    protected function throwSearchResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void
+    public function throwSearchResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void
     {
         throw new SearchResponseException(
             $message,
@@ -72,7 +72,7 @@ abstract class AbstractClient
     /**
      * @throws IndexResponseException
      */
-    protected function throwIndexResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void
+    public function throwIndexResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void
     {
         throw new IndexResponseException(
             $message,
@@ -83,7 +83,7 @@ abstract class AbstractClient
     /**
      * @throws DeleteResponseException
      */
-    protected function throwDeleteResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void
+    public function throwDeleteResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void
     {
         throw new DeleteResponseException(
             $message,
@@ -94,7 +94,7 @@ abstract class AbstractClient
     /**
      * @throws UpdateResponseException
      */
-    protected function throwUpdateResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void
+    public function throwUpdateResponseException(string $message, int $code = Response::HTTP_BAD_REQUEST): void
     {
         throw new UpdateResponseException(
             $message,
@@ -105,7 +105,7 @@ abstract class AbstractClient
     /**
      * @throws ConflictResponseException
      */
-    protected function throwConflictResponseException(string $message, int $code = Response::HTTP_CONFLICT): void
+    public function throwConflictResponseException(string $message, int $code = Response::HTTP_CONFLICT): void
     {
         throw new ConflictResponseException(
             $message,
