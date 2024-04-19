@@ -66,7 +66,7 @@ class Alias implements AliasInterface
 
     public function runActions(array $actions): Response
     {
-        $response = $this->client->getBaseClient()->post('_aliases', $actions);
+        $response = $this->client->getBaseClient()->post('_aliases', ['actions' => $actions]);
 
         if ($response->clientError()) {
             $this->client->throwUpdateResponseException(
@@ -93,14 +93,14 @@ class Alias implements AliasInterface
         $response = $this->runActions([
             [
                 'add' => [
-                    'index' => $alias,
-                    'alias' => $newIndex,
+                    'index' => $newIndex,
+                    'alias' => $alias,
                 ]
             ],
             [
                 'remove' => [
-                    'index' => $alias,
-                    'alias' => $oldIndex,
+                    'index' => $oldIndex,
+                    'alias' => $alias,
                 ]
             ]
         ]);

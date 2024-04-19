@@ -19,7 +19,7 @@ class Index implements IndexInterface
      */
     public function create(string $name, array $settings = []): bool
     {
-        $response = $this->client->getBaseClient()->put($name, $settings);
+        $response = $this->client->getBaseClient()->put($name, (object) $settings);
 
         if ($response->clientError()) {
             $this->client->throwUpdateResponseException(
