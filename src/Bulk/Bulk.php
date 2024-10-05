@@ -37,7 +37,7 @@ class Bulk implements BulkOperationInterface
 
     public function getDocuments(): array
     {
-        return $this->documents;
+        return $this->documents ?? [];
     }
 
     /**
@@ -55,7 +55,7 @@ class Bulk implements BulkOperationInterface
             $body[] = json_encode($document, JSON_THROW_ON_ERROR);
         }
 
-        return join(PHP_EOL, $body) . PHP_EOL;
+        return implode(PHP_EOL, $body) . PHP_EOL;
     }
 
     /*

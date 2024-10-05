@@ -39,35 +39,17 @@ class Aggregation implements AggregationInterface
 
     public function toRequestArray(): array
     {
-        $request = [
-            $this->name => $this->data,
+        $aggregationArray = [
+            $this->name => $this->data
         ];
 
-        if (!empty($this->subAggregations)) {
-            foreach ($this->subAggregations as $subAggregation) {
-                $request[$this->name]['aggs'][$subAggregation->getName()] = $this->handleSubAggregationData($subAggregation);
-            }
+        foreach ($this->subAggregations as $subAggregation) {
+            $aggregationArray[$this->name]['aggs'] = array_merge(
+                $aggregationArray[$this->name]['aggs'] ?? [],
+                $subAggregation->toRequestArray()
+            );
         }
 
-        return $request;
-    }
-
-    private function handleSubAggregationData(Aggregation $aggregation): array
-    {
-        $request = $aggregation->getData();
-
-        if (!empty($aggregation->subAggregations)) {
-            foreach ($aggregation->subAggregations as $subAggregation) {
-                $subAggregationData = $subAggregation->getData();
-
-                $request['aggs'][$subAggregation->getName()] = $subAggregationData;
-
-                if (!empty($subAggregation->getSubAggregations())) {
-                    $subAggregationData['aggs'] = $this->handleSubAggregationData($subAggregation);
-                }
-            }
-        }
-
-        return $request;
+        return $aggregationArray;
     }
 }
