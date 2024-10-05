@@ -113,6 +113,14 @@ class Builder implements BuilderInterface
         return $this;
     }
 
+    public function whereNotIn(string $field, array $values): self
+    {
+        $this->query['bool']['must_not'][]['terms'][$field] = $values;
+
+        return $this;
+    }
+
+
     public function orWhereIn(string $field, array $values): self
     {
         $this->query['bool']['should'][]['terms'][$field] = $values;
@@ -433,7 +441,7 @@ class Builder implements BuilderInterface
 
     public function getSort(): array
     {
-        return $this->sort;
+        return $this->sort ?? [];
     }
 
     public function getSelect(): array
